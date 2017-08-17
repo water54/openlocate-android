@@ -32,13 +32,6 @@ OpenLocate is supported by mobile app developers, non-profit trade groups, acade
 
 - Android - Min SDK version 19
 
-## Communication
-
-- If you **need help**, use [Stack Overflow](https://stackoverflow.com). (Tag 'OpenLocate') 
-- If you **found a bug**, open an issue.
-- If you **have a feature request**, open an issue.
-- If you **want to contribute**, submit a pull request.
-
 ## Installation
 
 ### Adding to your project
@@ -53,11 +46,10 @@ compile 'com.openlocate:openlocate-android:0.1.0'
 
 ### Start tracking of location
 
-1. Start location tracking by providing your configuration as an object which extends the `Configuration` abstract class. The `Configuration` abstract should implement `getUrl()` as `String` and optionally `getHeaders()` as `HashMap<String, String>`. To send location to the SafeGraph platform, use `SafeGraphConfiguration`, which also extends the `Configuration` class as demonstrated below.
+1. Start location tracking by providing your configuration as an object which extends the `Configuration` abstract class. The `Configuration` abstract should implement `getUrl()` as `String` and optionally `getHeaders()` as `HashMap<String, String>`.
 
 ```java
-UUID uuid = UUID.fromString("<YOUR_UUID>");
-Configuration config = new SafeGraphConfiguration(uuid, "<YOUR_TOKEN>");
+Configuration config = <Your Implementation of Class>;
 try {
   OpenLocate.getInstance(context).startTracking(config);
 } catch (Exception e) {
@@ -85,6 +77,13 @@ The following fields are collected by the SDK to be sent to an external API:
 5. `id_type` - 'aaid' for identifying android advertising type
 6. `ad_id` - Advertising identifier
 7. `ad_opt_out` - Limited ad tracking enabled flag
+
+## Communication
+
+- If you **need help**, use [Stack Overflow](https://stackoverflow.com). (Tag 'OpenLocate') 
+- If you **found a bug**, open an issue.
+- If you **have a feature request**, open an issue.
+- If you **want to contribute**, submit a pull request.
 
 ## License
 
