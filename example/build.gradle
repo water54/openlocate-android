@@ -1,0 +1,59 @@
+buildscript {
+    repositories {
+        maven { url 'https://maven.fabric.io/public' }
+    }
+
+    dependencies {
+        classpath 'io.fabric.tools:gradle:1.+'
+    }
+}
+apply plugin: 'com.android.application'
+apply plugin: 'io.fabric'
+
+repositories {
+    maven { url 'https://maven.fabric.io/public' }
+}
+
+
+android {
+    compileSdkVersion 25
+    buildToolsVersion "25.0.2"
+
+    defaultConfig {
+        applicationId "com.openlocate.example"
+        minSdkVersion 19
+        targetSdkVersion 25
+        versionCode 10
+        versionName "1.0"
+
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            buildConfigField 'String', 'TOKEN', "\"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzY29wZSI6WyJpbmdlc3Q6NzRkMmU0NDUtZDkxZC00NDVjLTg0MTMtYjA3YTdlYzc2ZTYzIl0sInByb3ZpZGVyX2lkIjo5OTk5OSwiaWF0IjoxNTAyMzIyNDM5LCJleHAiOjE2NjAxMTA0MzksImF1ZCI6Imh0dHBzOi8vSW5nZXN0U2VydmVyIn0.t-xVsYjQ_Mxvv4hElxUpPgKqCalaWwQdGhlXpruILx8\""
+            buildConfigField 'String', 'UUID', "\"74d2e445-d91d-445c-8413-b07a7ec76e63\""
+        }
+
+        debug {
+            buildConfigField 'String', 'TOKEN', "\"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzY29wZSI6WyJpbmdlc3Q6NzRkMmU0NDUtZDkxZC00NDVjLTg0MTMtYjA3YTdlYzc2ZTYzIl0sInByb3ZpZGVyX2lkIjo5OTk5OSwiaWF0IjoxNTAyMzIyNDM5LCJleHAiOjE2NjAxMTA0MzksImF1ZCI6Imh0dHBzOi8vSW5nZXN0U2VydmVyIn0.t-xVsYjQ_Mxvv4hElxUpPgKqCalaWwQdGhlXpruILx8\""
+            buildConfigField 'String', 'UUID', "\"74d2e445-d91d-445c-8413-b07a7ec76e63\""
+        }
+    }
+}
+
+dependencies {
+    compile fileTree(include: ['*.jar'], dir: 'libs')
+    androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
+        exclude group: 'com.android.support', module: 'support-annotations'
+    })
+    compile 'com.android.support:appcompat-v7:25.3.1'
+    compile 'com.android.support.constraint:constraint-layout:1.0.2'
+    testCompile 'junit:junit:4.12'
+    compile project(':openlocate')
+    compile('com.crashlytics.sdk.android:crashlytics:2.6.8@aar') {
+        transitive = true;
+    }
+}
