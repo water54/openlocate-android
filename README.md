@@ -71,7 +71,7 @@ OpenLocate.getInstance(context).stopTracking()
 
 ### Fields collected by the SDK
 
-The following fields are collected by the SDK to be sent to an external API:
+The following fields are collected by the SDK to be sent to a private or public API:
 
 1. `latitude` - Latitude of the device
 2. `longitude` - Longitude of the device
