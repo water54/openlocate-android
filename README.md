@@ -46,7 +46,7 @@ compile 'com.openlocate:openlocate-android:0.1.0'
 
 ### Start tracking of location
 
-1. Start location tracking by providing your configuration as an object which extends the `Configuration` abstract class. The `Configuration` abstract should implement `getUrl()` as `String` and optionally `getHeaders()` as `HashMap<String, String>`.
+Build your configuration with your URL and headers and supply it to the `startTracking` method.
 
 ```java
 Configuration config = new Configuration.ConfigurationBuilder()
