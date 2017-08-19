@@ -33,14 +33,14 @@ import android.widget.Button;
 import android.widget.Toast;
 
 import com.crashlytics.android.Crashlytics;
-import com.openlocate.android.config.SafeGraphConfiguration;
+import com.openlocate.android.config.Configuration;
 import com.openlocate.android.core.OpenLocate;
 import com.openlocate.android.exceptions.InvalidConfigurationException;
 import com.openlocate.android.exceptions.LocationConfigurationException;
 import com.openlocate.android.exceptions.LocationPermissionException;
 import com.openlocate.android.exceptions.LocationServiceConflictException;
 
-import java.util.UUID;
+import java.util.HashMap;
 
 import io.fabric.sdk.android.Fabric;
 
@@ -85,8 +85,13 @@ public class MainActivity extends AppCompatActivity {
     private void startTracking() {
 
         try {
+            HashMap<String, String> headers = new HashMap<>();
+            headers.put("Authorization", "Bearer " + BuildConfig.TOKEN);
+            Configuration configuration = new Configuration.ConfigurationBuilder()
+                    .setUrl(BuildConfig.URL)
+                    .setHeaders(headers)
+                    .createConfiguration();
             OpenLocate openLocate = OpenLocate.getInstance(getApplicationContext());
-            SafeGraphConfiguration configuration = new SafeGraphConfiguration(UUID.fromString(BuildConfig.UUID), BuildConfig.TOKEN);
             openLocate.startTracking(configuration);
             Toast.makeText(this, "Location service started", Toast.LENGTH_LONG).show();
             onStartService();

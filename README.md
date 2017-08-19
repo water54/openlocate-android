@@ -49,7 +49,10 @@ compile 'com.openlocate:openlocate-android:0.1.0'
 1. Start location tracking by providing your configuration as an object which extends the `Configuration` abstract class. The `Configuration` abstract should implement `getUrl()` as `String` and optionally `getHeaders()` as `HashMap<String, String>`.
 
 ```java
-Configuration config = <Your Implementation of Class>;
+Configuration config = new Configuration.ConfigurationBuilder()
+                    .setUrl(<Your URL>)
+                    .setHeaders(<Your Headers>)
+                    .createConfiguration();
 try {
   OpenLocate.getInstance(context).startTracking(config);
 } catch (Exception e) {
