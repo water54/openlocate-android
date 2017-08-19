@@ -23,9 +23,41 @@ package com.openlocate.android.config;
 
 import java.util.HashMap;
 
-public abstract class Configuration {
-    public abstract String getUrl();
-    public abstract HashMap<String, String> getHeaders();
+public class Configuration {
+    private String url;
+    private HashMap<String, String> headers;
+
+    public static class ConfigurationBuilder {
+        private String url;
+        private HashMap<String, String> headers;
+
+        public ConfigurationBuilder setUrl(String url) {
+            this.url = url;
+            return this;
+        }
+
+        public ConfigurationBuilder setHeaders(HashMap<String, String> headers) {
+            this.headers = headers;
+            return this;
+        }
+
+        public Configuration createConfiguration() {
+            return new Configuration(url, headers);
+        }
+    }
+
+    public Configuration(String url, HashMap<String, String> headers) {
+        this.url = url;
+        this.headers = headers;
+    }
+
+    public String getUrl() {
+        return url;
+    }
+
+    public HashMap<String, String> getHeaders() {
+        return headers;
+    }
 
     public boolean isValid() {
         return getUrl() != null && !getUrl().isEmpty();
