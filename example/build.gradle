@@ -35,11 +35,13 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
             buildConfigField 'String', 'TOKEN', "\"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzY29wZSI6WyJpbmdlc3Q6NzRkMmU0NDUtZDkxZC00NDVjLTg0MTMtYjA3YTdlYzc2ZTYzIl0sInByb3ZpZGVyX2lkIjo5OTk5OSwiaWF0IjoxNTAyMzIyNDM5LCJleHAiOjE2NjAxMTA0MzksImF1ZCI6Imh0dHBzOi8vSW5nZXN0U2VydmVyIn0.t-xVsYjQ_Mxvv4hElxUpPgKqCalaWwQdGhlXpruILx8\""
             buildConfigField 'String', 'UUID', "\"74d2e445-d91d-445c-8413-b07a7ec76e63\""
+            buildConfigField 'String', 'URL', "\"https://api.safegraph.com/v1/provider/74d2e445-d91d-445c-8413-b07a7ec76e63/devicelocation\""
         }
 
         debug {
             buildConfigField 'String', 'TOKEN', "\"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzY29wZSI6WyJpbmdlc3Q6NzRkMmU0NDUtZDkxZC00NDVjLTg0MTMtYjA3YTdlYzc2ZTYzIl0sInByb3ZpZGVyX2lkIjo5OTk5OSwiaWF0IjoxNTAyMzIyNDM5LCJleHAiOjE2NjAxMTA0MzksImF1ZCI6Imh0dHBzOi8vSW5nZXN0U2VydmVyIn0.t-xVsYjQ_Mxvv4hElxUpPgKqCalaWwQdGhlXpruILx8\""
             buildConfigField 'String', 'UUID', "\"74d2e445-d91d-445c-8413-b07a7ec76e63\""
+            buildConfigField 'String', 'URL', "\"https://api.safegraph.com/v1/provider/74d2e445-d91d-445c-8413-b07a7ec76e63/devicelocation\""
         }
     }
 }
