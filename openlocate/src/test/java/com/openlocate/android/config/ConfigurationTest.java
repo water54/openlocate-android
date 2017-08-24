@@ -41,10 +41,10 @@ public class ConfigurationTest {
 
     @Test
     public void testConfigurationBuilder() {
-        Configuration builderConfiguration = new Configuration.ConfigurationBuilder()
+        Configuration builderConfiguration = new Configuration.Builder()
                 .setUrl(url)
                 .setHeaders(headers)
-                .createConfiguration();
+                .build();
 
         assertThat(builderConfiguration.isValid(), is(true));
         assertThat(builderConfiguration.getUrl(), is(url));

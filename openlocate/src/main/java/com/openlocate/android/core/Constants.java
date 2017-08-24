@@ -22,8 +22,19 @@
 package com.openlocate.android.core;
 
 final class Constants {
+
+    // Default Location constants
+    static final long DEFAULT_LOCATION_INTERVAL = 120;
+    static final long DEFAULT_TRANSMISSION_INTERVAL = 300;
+    static final LocationAccuracy DEFAULT_LOCATION_ACCURACY = LocationAccuracy.HIGH;
+
+    // Location service intent keys
     static final String URL_KEY = "url";
     static final String HEADER_KEY = "header";
+
+    static final String LOCATION_ACCURACY_KEY = "location_accuracy";
+    static final String LOCATION_INTERVAL_KEY = "location_interval";
+    static final String TRANSMISSION_INTERVAL_KEY = "transmission_interval";
 
     static final String HOST_KEY = "host";
     static final String PORT_KEY = "port";
@@ -32,4 +43,9 @@ final class Constants {
     static final String LIMITED_AD_TRACKING_ENABLED_KEY = "limited_ad_tracking_enabled";
 
     static final int DEFAULT_PORT = -1;
+
+    // Local broadcast manager event names
+    static final String LOCATION_INTERVAL_CHANGED = Constants.class.getCanonicalName() + "LocationIntervalChanged";
+    static final String LOCATION_ACCURACY_CHANGED = Constants.class.getCanonicalName() + "LocationAccuracyChanged";
+    static final String TRANSMISSION_INTERVAL_CHANGED = Constants.class.getCanonicalName() + "TransmissionIntervalChanged";
 }

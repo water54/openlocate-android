@@ -27,26 +27,26 @@ public class Configuration {
     private String url;
     private HashMap<String, String> headers;
 
-    public static class ConfigurationBuilder {
+    public static class Builder {
         private String url;
         private HashMap<String, String> headers;
 
-        public ConfigurationBuilder setUrl(String url) {
+        public Builder setUrl(String url) {
             this.url = url;
             return this;
         }
 
-        public ConfigurationBuilder setHeaders(HashMap<String, String> headers) {
+        public Builder setHeaders(HashMap<String, String> headers) {
             this.headers = headers;
             return this;
         }
 
-        public Configuration createConfiguration() {
+        public Configuration build() {
             return new Configuration(url, headers);
         }
     }
 
-    public Configuration(String url, HashMap<String, String> headers) {
+    private Configuration(String url, HashMap<String, String> headers) {
         this.url = url;
         this.headers = headers;
     }

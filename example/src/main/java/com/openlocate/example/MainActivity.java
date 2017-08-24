@@ -87,10 +87,10 @@ public class MainActivity extends AppCompatActivity {
         try {
             HashMap<String, String> headers = new HashMap<>();
             headers.put("Authorization", "Bearer " + BuildConfig.TOKEN);
-            Configuration configuration = new Configuration.ConfigurationBuilder()
+            Configuration configuration = new Configuration.Builder()
                     .setUrl(BuildConfig.URL)
                     .setHeaders(headers)
-                    .createConfiguration();
+                    .build();
             OpenLocate openLocate = OpenLocate.getInstance(getApplicationContext());
             openLocate.startTracking(configuration);
             Toast.makeText(this, "Location service started", Toast.LENGTH_LONG).show();

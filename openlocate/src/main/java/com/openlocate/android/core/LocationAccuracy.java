@@ -21,32 +21,46 @@
  */
 package com.openlocate.android.core;
 
-import com.openlocate.android.config.Configuration;
-import com.openlocate.android.exceptions.InvalidConfigurationException;
-import com.openlocate.android.exceptions.LocationConfigurationException;
-import com.openlocate.android.exceptions.LocationPermissionException;
-import com.openlocate.android.exceptions.LocationServiceConflictException;
+import com.google.android.gms.location.LocationRequest;
 
-interface OpenLocateLocationTracker {
-    void startTracking(Configuration configuration)
-            throws InvalidConfigurationException,
-            LocationServiceConflictException,
-            LocationConfigurationException,
-            LocationPermissionException;
+public enum LocationAccuracy {
+    LOW,
+    MEDIUM,
+    HIGH;
 
-    void stopTracking();
+    @Override
+    public String toString() {
+        String stringValue;
 
-    boolean isTracking();
+        switch (this) {
+            case LOW:
+                stringValue = "low";
+                break;
+            case MEDIUM:
+                stringValue = "medium";
+                break;
+            default:
+                stringValue = "high";
+                break;
+        }
 
-    long getLocationInterval();
+        return stringValue;
+    }
 
-    void setLocationInterval(long locationInterval);
+    int getLocationRequestAccuracy() {
+        int locationAccuracy;
 
-    long getTransmissionInterval();
+        switch (this) {
+            case LOW:
+                locationAccuracy = LocationRequest.PRIORITY_LOW_POWER;
+                break;
+            case MEDIUM:
+                locationAccuracy = LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY;
+                break;
+            default:
+                locationAccuracy = LocationRequest.PRIORITY_HIGH_ACCURACY;
+        }
 
-    void setTransmissionInterval(long transmissionInterval);
-
-    LocationAccuracy getAccuracy();
-
-    void setAccuracy(LocationAccuracy accuracy);
+        return locationAccuracy;
+    }
 }

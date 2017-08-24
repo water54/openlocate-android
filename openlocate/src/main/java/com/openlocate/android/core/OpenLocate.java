@@ -23,6 +23,7 @@ package com.openlocate.android.core;
 
 import android.content.Context;
 import android.content.Intent;
+import android.support.v4.content.LocalBroadcastManager;
 
 import com.google.android.gms.ads.identifier.AdvertisingIdClient;
 import com.openlocate.android.R;
@@ -43,6 +44,10 @@ public class OpenLocate implements OpenLocateLocationTracker {
 
     private Context context;
     private Logger logger;
+
+    private long locationInterval = Constants.DEFAULT_LOCATION_INTERVAL;
+    private long transmissionInterval = Constants.DEFAULT_TRANSMISSION_INTERVAL;
+    private LocationAccuracy accuracy = Constants.DEFAULT_LOCATION_ACCURACY;
 
     private OpenLocate(Context context) {
         this.context = context;
@@ -82,6 +87,7 @@ public class OpenLocate implements OpenLocateLocationTracker {
         intent.putExtra(Constants.PORT_KEY, Host.TCP_PORT);
         intent.putExtra(Constants.URL_KEY, configuration.getUrl());
         intent.putExtra(Constants.HEADER_KEY, configuration.getHeaders());
+        updateLocationConfigurationInfo(intent);
 
         if (info != null) {
             updateAdvertisingInfo(intent, info.getId(), info.isLimitAdTrackingEnabled());
@@ -93,6 +99,12 @@ public class OpenLocate implements OpenLocateLocationTracker {
     private void updateAdvertisingInfo(Intent intent, String advertisingId, boolean isLimitedAdTrackingEnabled) {
         intent.putExtra(Constants.ADVERTISING_ID_KEY, advertisingId);
         intent.putExtra(Constants.LIMITED_AD_TRACKING_ENABLED_KEY, isLimitedAdTrackingEnabled);
+    }
+
+    private void updateLocationConfigurationInfo(Intent intent) {
+        intent.putExtra(Constants.LOCATION_ACCURACY_KEY, accuracy);
+        intent.putExtra(Constants.LOCATION_INTERVAL_KEY, locationInterval);
+        intent.putExtra(Constants.TRANSMISSION_INTERVAL_KEY, transmissionInterval);
     }
 
     private boolean hasTrackingCapabilities(Configuration configuration) throws InvalidConfigurationException, IllegalStateException {
@@ -153,5 +165,50 @@ public class OpenLocate implements OpenLocateLocationTracker {
     private void setupRemoteLogger() {
         TcpClient tcpClient = new TcpClientImpl(Host.TCP_HOST, Host.TCP_PORT);
         logger = new RemoteLogger(tcpClient, LogLevel.INFO);
+    }
+
+    public long getLocationInterval() {
+        return locationInterval;
+    }
+
+    public void setLocationInterval(long locationInterval) {
+        this.locationInterval = locationInterval;
+        broadcastLocationIntervalChanged();
+    }
+
+    public long getTransmissionInterval() {
+        return transmissionInterval;
+    }
+
+    public void setTransmissionInterval(long transmissionInterval) {
+        this.transmissionInterval = transmissionInterval;
+        broadcastTransmissionIntervalChanged();
+    }
+
+    public LocationAccuracy getAccuracy() {
+        return accuracy;
+    }
+
+    public void setAccuracy(LocationAccuracy accuracy) {
+        this.accuracy = accuracy;
+        broadcastLocationAccuracyChanged();
+    }
+
+    private void broadcastLocationIntervalChanged() {
+        Intent intent = new Intent(Constants.LOCATION_INTERVAL_CHANGED);
+        intent.putExtra(Constants.LOCATION_INTERVAL_KEY, locationInterval);
+        LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
+    }
+
+    private void broadcastTransmissionIntervalChanged() {
+        Intent intent = new Intent(Constants.TRANSMISSION_INTERVAL_CHANGED);
+        intent.putExtra(Constants.TRANSMISSION_INTERVAL_KEY, transmissionInterval);
+        LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
+    }
+
+    private void broadcastLocationAccuracyChanged() {
+        Intent intent = new Intent(Constants.LOCATION_ACCURACY_CHANGED);
+        intent.putExtra(Constants.LOCATION_ACCURACY_KEY, accuracy);
+        LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
     }
 }
