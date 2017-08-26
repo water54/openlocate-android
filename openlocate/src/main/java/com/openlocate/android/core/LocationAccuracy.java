@@ -24,43 +24,21 @@ package com.openlocate.android.core;
 import com.google.android.gms.location.LocationRequest;
 
 public enum LocationAccuracy {
-    LOW,
-    MEDIUM,
-    HIGH;
+    LOW(LocationRequest.PRIORITY_LOW_POWER),
+    MEDIUM(LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY),
+    HIGH(LocationRequest.PRIORITY_HIGH_ACCURACY);
+
+    private final int locationRequestAccuracy;
+    LocationAccuracy(int locationRequestAccuracy) {
+        this.locationRequestAccuracy = locationRequestAccuracy;
+    }
 
     @Override
     public String toString() {
-        String stringValue;
-
-        switch (this) {
-            case LOW:
-                stringValue = "low";
-                break;
-            case MEDIUM:
-                stringValue = "medium";
-                break;
-            default:
-                stringValue = "high";
-                break;
-        }
-
-        return stringValue;
+        return name().toLowerCase();
     }
 
     int getLocationRequestAccuracy() {
-        int locationAccuracy;
-
-        switch (this) {
-            case LOW:
-                locationAccuracy = LocationRequest.PRIORITY_LOW_POWER;
-                break;
-            case MEDIUM:
-                locationAccuracy = LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY;
-                break;
-            default:
-                locationAccuracy = LocationRequest.PRIORITY_HIGH_ACCURACY;
-        }
-
-        return locationAccuracy;
+        return locationRequestAccuracy;
     }
 }
