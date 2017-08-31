@@ -15,7 +15,7 @@ public class ConfigurationTest {
 
     @Before
     public void setUp() {
-        configuration = new Configuration(url, headers);
+        configuration = new Configuration.Builder().setUrl(url).setHeaders(headers).build();
     }
 
     @Test
@@ -35,7 +35,7 @@ public class ConfigurationTest {
 
     @Test
     public void isValidNullValuesFalse() {
-        Configuration badConfiguration = new Configuration(null, null);
+        Configuration badConfiguration = new Configuration.Builder().build();
         assertThat(badConfiguration.isValid(), is(false));
     }
 
