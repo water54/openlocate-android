@@ -19,8 +19,9 @@ platform :android do
 
   desc "Runs all the tests"
   lane :test do
-    gradle(task: "openlocate:test")
-    #gradle(task: "openlocate:connectedAndroidTest")
+    gradle(
+      task: "jacocoTestReport"
+    )
   end
 
   desc "Submit a new Beta Build to Crashlytics Beta"
@@ -62,10 +63,35 @@ platform :android do
     
   end
 
-  desc "Deploy a new version to the Google Play"
-  lane :deploy do
-    gradle(task: "assembleRelease")
-    supply
+  desc "Deploy a new version of framework to maven repository"
+  lane :release do |lane|
+    
+    if !lane[:version]
+      raise "No version specified!".red
+    end
+    
+    ensure_git_status_clean
+    ensure_git_branch
+
+    version = lane[:version]
+    gradle(task: "jarRelease publish")
+
+    s3_update_acl(
+      region: ENV['S3_REGION'],
+      bucket: ENV['S3_BUCKET'],
+      access_key: ENV['S3_ACCESS_KEY'],
+      secret_access_key: ENV['S3_SECRET_ACCESS_KEY'],
+      version: version
+    )
+
+    # post message to slack
+    slack(
+      message: 'Published new version of the SDK :rocket:',
+      success: true,
+      payload: {
+        'Version' => version,
+      },
+    )
   end
 
   error do |lane, exception|

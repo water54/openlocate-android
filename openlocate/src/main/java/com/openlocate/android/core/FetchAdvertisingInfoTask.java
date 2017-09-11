@@ -22,8 +22,8 @@
 package com.openlocate.android.core;
 
 import android.content.Context;
-import android.database.sqlite.SQLiteOpenHelper;
 import android.os.AsyncTask;
+import android.util.Log;
 
 import com.google.android.gms.ads.identifier.AdvertisingIdClient;
 import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
@@ -33,16 +33,16 @@ import java.io.IOException;
 
 final class FetchAdvertisingInfoTask extends AsyncTask<Void, Void, Void> {
 
+    private static final String TAG = FetchAdvertisingInfoTask.class.getSimpleName();
+
     private Context context;
     private FetchAdvertisingInfoTaskCallback callback;
-    private Logger logger;
 
     private AdvertisingIdClient.Info info;
 
     FetchAdvertisingInfoTask(Context context, FetchAdvertisingInfoTaskCallback callback) {
         this.context = context;
         this.callback = callback;
-        this.logger = getLogger(context);
     }
 
     @Override
@@ -52,7 +52,7 @@ final class FetchAdvertisingInfoTask extends AsyncTask<Void, Void, Void> {
         } catch (IOException
                 | GooglePlayServicesNotAvailableException
                 | GooglePlayServicesRepairableException e) {
-            logger.e(e.getMessage());
+            Log.e(TAG, e.getMessage());
         }
 
         return null;
@@ -64,11 +64,5 @@ final class FetchAdvertisingInfoTask extends AsyncTask<Void, Void, Void> {
         if (callback != null) {
             callback.onAdvertisingInfoTaskExecute(info);
         }
-    }
-
-    private Logger getLogger(Context context) {
-        SQLiteOpenHelper helper = new DatabaseHelper(context);
-        LoggerDataSource loggerDataSource = new LoggerDatabase(helper);
-        return new DatabaseLogger(loggerDataSource, LogLevel.INFO);
     }
 }

@@ -53,4 +53,16 @@ public class LocationProviderTests {
         // Then
         assertEquals("passive", passive.toString());
     }
+
+    @Test
+    public void testLocationProviderValueOf() {
+        assertEquals(LocationProvider.valueOf("GPS"), LocationProvider.GPS);
+        assertEquals(LocationProvider.valueOf("NETWORK"), LocationProvider.NETWORK);
+        assertEquals(LocationProvider.valueOf("PASSIVE"), LocationProvider.PASSIVE);
+    }
+
+    @Test
+    public void testLocationProviderValus() {
+        assertEquals(LocationAccuracy.values(), LocationAccuracy.values());
+    }
 }

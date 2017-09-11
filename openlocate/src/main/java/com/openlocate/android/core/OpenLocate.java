@@ -24,9 +24,9 @@ package com.openlocate.android.core;
 import android.content.Context;
 import android.content.Intent;
 import android.support.v4.content.LocalBroadcastManager;
+import android.util.Log;
 
 import com.google.android.gms.ads.identifier.AdvertisingIdClient;
-import com.openlocate.android.R;
 import com.openlocate.android.config.Configuration;
 import com.openlocate.android.exceptions.InvalidConfigurationException;
 import com.openlocate.android.exceptions.LocationConfigurationException;
@@ -35,15 +35,10 @@ import com.openlocate.android.exceptions.LocationServiceConflictException;
 
 public class OpenLocate implements OpenLocateLocationTracker {
 
-    private class Host {
-        static final String TCP_HOST = "54.186.254.109";
-        static final int TCP_PORT = 5000;
-    }
-
     private static OpenLocate sharedInstance = null;
+    private static final String TAG = OpenLocate.class.getSimpleName();
 
     private Context context;
-    private Logger logger;
 
     private long locationInterval = Constants.DEFAULT_LOCATION_INTERVAL;
     private long transmissionInterval = Constants.DEFAULT_TRANSMISSION_INTERVAL;
@@ -51,7 +46,6 @@ public class OpenLocate implements OpenLocateLocationTracker {
 
     private OpenLocate(Context context) {
         this.context = context;
-        setupRemoteLogger();
     }
 
     public static OpenLocate getInstance(Context context) {
@@ -83,8 +77,6 @@ public class OpenLocate implements OpenLocateLocationTracker {
     private void onFetchAdvertisingInfo(AdvertisingIdClient.Info info, Configuration configuration) {
         Intent intent = new Intent(context, LocationService.class);
 
-        intent.putExtra(Constants.HOST_KEY, Host.TCP_HOST);
-        intent.putExtra(Constants.PORT_KEY, Host.TCP_PORT);
         intent.putExtra(Constants.URL_KEY, configuration.getUrl());
         intent.putExtra(Constants.HEADER_KEY, configuration.getHeaders());
         updateLocationConfigurationInfo(intent);
@@ -117,36 +109,44 @@ public class OpenLocate implements OpenLocateLocationTracker {
 
     private void validateConfiguration(Configuration configuration) throws InvalidConfigurationException {
         if (!configuration.isValid()) {
-            logger.e(context.getString(R.string.invalid_configuration_message));
+            String message = "Invalid configuration. Please configure a valid url or header.";
+
+            Log.e(TAG, message);
             throw new InvalidConfigurationException(
-                    context.getString(R.string.invalid_configuration_message)
+                    message
             );
         }
     }
 
     private void validateLocationService() throws LocationServiceConflictException {
         if (ServiceUtils.isServiceRunning(LocationService.class, context)) {
-            logger.e(context.getString(R.string.location_service_running_message));
+            String message = "Location tracking is already active. Please stop the previous tracking before starting,";
+
+            Log.e(TAG, message);
             throw new LocationServiceConflictException(
-                    context.getString(R.string.location_service_running_message)
+                    message
             );
         }
     }
 
     private void validateLocationPermission() throws LocationPermissionException {
         if (!LocationService.hasLocationPermission(context)) {
-            logger.e(context.getString(R.string.location_permission_denied_message));
+            String message = "Location permission is denied. Please enable location permission.";
+
+            Log.e(TAG, message);
             throw new LocationPermissionException(
-                    context.getString(R.string.location_permission_denied_message)
+                    message
             );
         }
     }
 
     private void validateLocationEnabled() throws LocationConfigurationException {
         if (!LocationService.isLocationEnabled(context)) {
-            logger.e(context.getString(R.string.location_disabled_message));
+            String message = "Location is switched off in the settings. Please enable it before continuing.";
+
+            Log.e(TAG, message);
             throw new LocationConfigurationException(
-                    context.getString(R.string.location_disabled_message)
+                    message
             );
         }
     }
@@ -160,11 +160,6 @@ public class OpenLocate implements OpenLocateLocationTracker {
     @Override
     public boolean isTracking() {
         return ServiceUtils.isServiceRunning(LocationService.class, context);
-    }
-
-    private void setupRemoteLogger() {
-        TcpClient tcpClient = new TcpClientImpl(Host.TCP_HOST, Host.TCP_PORT);
-        logger = new RemoteLogger(tcpClient, LogLevel.INFO);
     }
 
     public long getLocationInterval() {

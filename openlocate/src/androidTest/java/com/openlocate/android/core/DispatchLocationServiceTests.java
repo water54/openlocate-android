@@ -21,32 +21,5 @@
  */
 package com.openlocate.android.core;
 
-import org.junit.Test;
-
-import static org.junit.Assert.assertEquals;
-
-public class HttpMethodTypeTests {
-
-    @Test
-    public void testPostMethodType() {
-        // Given
-        HttpMethodType methodType = HttpMethodType.POST;
-
-        // Then
-        assertEquals("POST", methodType.toString());
-    }
-
-    @Test
-    public void testValueOf() {
-        assertEquals(HttpMethodType.valueOf("POST"), HttpMethodType.POST);
-    }
-
-    @Test
-    public void testValues() {
-        // Given
-        HttpMethodType[] methods = { HttpMethodType.POST };
-
-        // Then
-        assertEquals(methods, HttpMethodType.values());
-    }
+public class DispatchLocationServiceTests {
 }

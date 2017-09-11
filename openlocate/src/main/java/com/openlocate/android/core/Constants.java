@@ -36,16 +36,15 @@ final class Constants {
     static final String LOCATION_INTERVAL_KEY = "location_interval";
     static final String TRANSMISSION_INTERVAL_KEY = "transmission_interval";
 
-    static final String HOST_KEY = "host";
-    static final String PORT_KEY = "port";
-
     static final String ADVERTISING_ID_KEY = "advertising_id";
     static final String LIMITED_AD_TRACKING_ENABLED_KEY = "limited_ad_tracking_enabled";
 
     static final int DEFAULT_PORT = -1;
 
     // Local broadcast manager event names
-    static final String LOCATION_INTERVAL_CHANGED = Constants.class.getCanonicalName() + "LocationIntervalChanged";
-    static final String LOCATION_ACCURACY_CHANGED = Constants.class.getCanonicalName() + "LocationAccuracyChanged";
-    static final String TRANSMISSION_INTERVAL_CHANGED = Constants.class.getCanonicalName() + "TransmissionIntervalChanged";
+    static final String LOCATION_INTERVAL_CHANGED = Constants.class.getCanonicalName() + ".LocationIntervalChanged";
+    static final String LOCATION_ACCURACY_CHANGED = Constants.class.getCanonicalName() + ".LocationAccuracyChanged";
+    static final String TRANSMISSION_INTERVAL_CHANGED = Constants.class.getCanonicalName() + ".TransmissionIntervalChanged";
+
+    static final String IS_TEST_KEY = "is_test";
 }

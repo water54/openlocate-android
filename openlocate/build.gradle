@@ -1,6 +1,7 @@
 apply plugin: 'com.android.library'
 apply plugin: 'com.jfrog.bintray'
 apply plugin: 'jacoco'
+apply plugin: 'maven-publish'
 
 ext {
     bintrayRepo = 'OpenLocate'
@@ -15,7 +16,7 @@ ext {
     siteUrl = 'https://github.com/OpenLocate/openlocate-android'
     gitUrl = 'https://github.com/OpenLocate/openlocate-android.git'
 
-    libraryVersion = '0.1.2'
+    libraryVersion = '0.1.4'
 
     developerId = 'openlocate'
     developerName = 'OpenLocate'
@@ -70,9 +71,9 @@ dependencies {
     androidTestCompile 'junit:junit:4.12'
 
     compile 'com.android.support:appcompat-v7:25.3.1'
-    compile 'com.google.android.gms:play-services-location:11.0.2'
-    compile 'com.google.android.gms:play-services-gcm:11.0.2'
-    compile 'com.google.android.gms:play-services-ads:11.0.2'
+    compile 'com.google.android.gms:play-services-location:11.0.4'
+    compile 'com.google.android.gms:play-services-gcm:11.0.4'
+    compile 'com.google.android.gms:play-services-ads:11.0.4'
 
     testCompile 'junit:junit:4.12'
     testCompile 'org.json:json:20170516'
@@ -143,6 +144,38 @@ task jacocoTestReport(type: JacocoReport, dependsOn: ['testDebugUnitTest', 'crea
             "jacoco/testDebugUnitTest.exec",
             "outputs/code-coverage/connected/*coverage.ec"
     ])
+}
+
+publishing {
+    repositories {
+        maven {
+            url "s3://openlocate-android"
+            credentials(AwsCredentials) {
+                accessKey "${properties.getProperty("aws.accessKey")}"
+                secretKey "${properties.getProperty("aws.secretKey")}"
+            }
+        }
+    }
+
+    publications {
+        mavenJava(MavenPublication) {
+            version = project.version
+            artifactId = project.name
+            groupId = project.group
+            artifact("$buildDir/libs/${project.name}-${project.version}.jar")
+        }
+    }
+}
+
+android.libraryVariants.all { variant ->
+    def name = variant.buildType.name
+    if (name == "debug") {
+        return; // Skip debug builds.
+    }
+    def task = project.tasks.create "jar${name.capitalize()}", Jar
+    task.dependsOn variant.javaCompiler
+    task.from variant.javaCompiler.destinationDir
+    artifacts.add('archives', task);
 }
 
 apply from: 'https://raw.githubusercontent.com/nuuneoi/JCenter/master/installv1.gradle'

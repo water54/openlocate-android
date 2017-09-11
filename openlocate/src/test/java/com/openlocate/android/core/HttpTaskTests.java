@@ -21,8 +21,10 @@
  */
 package com.openlocate.android.core;
 
+import org.json.JSONObject;
 import org.junit.Test;
 
+import java.util.HashMap;
 import java.util.concurrent.ExecutionException;
 
 import static org.junit.Assert.assertEquals;
@@ -33,19 +35,30 @@ public class HttpTaskTests {
     @Test
     public void testHttpTask() {
         // Given
-        HttpRequest request = new HttpRequest.Builder()
-                .setUrl("hhttps://posttestserver.com/post.php")
-                .setMethodType(HttpMethodType.POST)
-                .build();
-        HttpTask task = new HttpTask();
-
-        // When
         try {
-            HttpResponse response = task.execute(request).get();
+            JSONObject object = new JSONObject();
+            object.put("Test", "value");
+            HashMap<String, String> headers = new HashMap<>();
+            headers.put("header", "value");
 
-            // Then
-            assertEquals(0, response.getStatusCode());
-        } catch (ExecutionException | InterruptedException e) {
+            HttpRequest request = new HttpRequest.Builder()
+                    .setUrl("hhttps://posttestserver.com/post.php")
+                    .setMethodType(HttpMethodType.POST)
+                    .setParams(object.toString())
+                    .setAdditionalHeaders(headers)
+                    .build();
+            HttpTask task = new HttpTask();
+
+            // When
+            try {
+                HttpResponse response = task.execute(request).get();
+
+                // Then
+                assertEquals(0, response.getStatusCode());
+            } catch (ExecutionException | InterruptedException e) {
+                assertFalse(true);
+            }
+        } catch (Exception e) {
             assertFalse(true);
         }
     }

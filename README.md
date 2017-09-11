@@ -36,10 +36,20 @@ OpenLocate is supported by mobile app developers, non-profit trade groups, acade
 
 ### Adding to your project
 
+Add the below line to your app's `build.gradle`:
+
+```groovy
+repositories {
+    maven {
+        url "https://s3-us-west-2.amazonaws.com/openlocate-android/"
+    }
+}
+```
+
 Add the below line to your app's `build.gradle` inside the `dependencies` section:
     
 ```groovy
-compile 'com.openlocate:openlocate-android:0.1.0'
+compile 'com.openlocate:openlocate:0.1.4'
 ```
 
 ## Usage
@@ -49,7 +59,7 @@ compile 'com.openlocate:openlocate-android:0.1.0'
 Build your configuration with your URL and headers and supply it to the `startTracking` method.
 
 ```java
-Configuration config = new Configuration.ConfigurationBuilder()
+Configuration config = new Configuration.Builder()
                     .setUrl(<Your URL>)
                     .setHeaders(<Your Headers>)
                     .createConfiguration();

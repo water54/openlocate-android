@@ -40,11 +40,11 @@ Runs all the tests
 fastlane android beta_debug
 ```
 Submit a new Beta Build to Crashlytics Beta
-### android deploy
+### android release
 ```
-fastlane android deploy
+fastlane android release
 ```
-Deploy a new version to the Google Play
+Deploy a new version of framework to maven repository
 
 ----
 

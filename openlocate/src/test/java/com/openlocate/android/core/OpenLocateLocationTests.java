@@ -31,7 +31,7 @@ import static org.junit.Assert.assertEquals;
 public class OpenLocateLocationTests {
     private double lat = 10.40;
     private double lng = 10.234;
-    private String accuracy = "40.43";
+    private double accuracy = 40.43;
     private boolean adOptOut = true;
     private String adId = "1234";
     private long timestamp = 341;
@@ -55,7 +55,7 @@ public class OpenLocateLocationTests {
     }
 
     @Test
-    public void testOpenTableJsonConstructor() {
+    public void testOpenLocateJsonConstructor() {
         // Given
         JSONObject jsonObject = getJson();
 
@@ -68,13 +68,23 @@ public class OpenLocateLocationTests {
         try {
             assertEquals(json.getDouble(OpenLocateLocation.Keys.LATITUDE), lat, 0.0d);
             assertEquals(json.getDouble(OpenLocateLocation.Keys.LONGITUDE), lng, 0.0d);
-            assertEquals(json.getString(OpenLocateLocation.Keys.HORIZONTAL_ACCURACY), accuracy);
+            assertEquals(json.getDouble(OpenLocateLocation.Keys.HORIZONTAL_ACCURACY), accuracy, 0.0);
             assertEquals(json.getLong(OpenLocateLocation.Keys.TIMESTAMP), timestamp);
             assertEquals(json.getBoolean(OpenLocateLocation.Keys.AD_OPT_OUT), adOptOut);
             assertEquals(json.getString(OpenLocateLocation.Keys.AD_ID), adId);
-            assertEquals(json.getLong(OpenLocateLocation.Keys.TIMESTAMP), timestamp);
         } catch (JSONException e) {
             e.printStackTrace();
         }
+    }
+
+    @Test
+    public void testKeys() {
+        assertEquals("ad_id", OpenLocateLocation.Keys.AD_ID);
+        assertEquals("ad_opt_out", OpenLocateLocation.Keys.AD_OPT_OUT);
+        assertEquals("id_type", OpenLocateLocation.Keys.AD_TYPE);
+        assertEquals("utc_timestamp", OpenLocateLocation.Keys.TIMESTAMP);
+        assertEquals("horizontal_accuracy", OpenLocateLocation.Keys.HORIZONTAL_ACCURACY);
+        assertEquals("longitude", OpenLocateLocation.Keys.LONGITUDE);
+        assertEquals("latitude", OpenLocateLocation.Keys.LATITUDE);
     }
 }

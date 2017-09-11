@@ -37,12 +37,10 @@ final class DatabaseHelper extends SQLiteOpenHelper {
     @Override
     public void onCreate(SQLiteDatabase db) {
         LocationTable.createIfRequired(db);
-        LogTable.createIfRequired(db);
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         LocationTable.upgrade(db, oldVersion, newVersion);
-        LogTable.upgrade(db, oldVersion, newVersion);
     }
 }
