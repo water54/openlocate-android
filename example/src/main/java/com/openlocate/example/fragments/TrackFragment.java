@@ -1,3 +1,4 @@
+
 /*
  * Copyright (c) 2017 OpenLocate
  *
@@ -19,48 +20,59 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.openlocate.example;
+package com.openlocate.example.fragments;
 
 import android.Manifest;
+import android.app.Activity;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
-import android.support.v7.app.AppCompatActivity;
+import android.support.v4.app.Fragment;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.Toast;
 
-import com.crashlytics.android.Crashlytics;
 import com.openlocate.android.config.Configuration;
 import com.openlocate.android.core.OpenLocate;
 import com.openlocate.android.exceptions.InvalidConfigurationException;
 import com.openlocate.android.exceptions.LocationConfigurationException;
 import com.openlocate.android.exceptions.LocationPermissionException;
 import com.openlocate.android.exceptions.LocationServiceConflictException;
+import com.openlocate.example.BuildConfig;
+import com.openlocate.example.R;
+import com.openlocate.example.activities.MainActivity;
 
 import java.util.HashMap;
 
-import io.fabric.sdk.android.Fabric;
+public class TrackFragment extends Fragment {
 
-public class MainActivity extends AppCompatActivity {
-
-    static final int LOCATION_PERMISSION = 1001;
-
+    private static final int LOCATION_PERMISSION = 1001;
     private static String TAG = MainActivity.class.getSimpleName();
 
+    private Activity activity;
     private Button startButton;
     private Button stopButton;
 
+    public static TrackFragment getInstance() {
+        return new TrackFragment();
+    }
+
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-
+    public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Fabric.with(this, new Crashlytics());
-        setContentView(R.layout.activity_main);
+        activity = getActivity();
+    }
 
-        startButton = (Button) findViewById(R.id.start_button);
+    @Nullable
+    @Override
+    public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        View view = inflater.inflate(R.layout.fragment_track, null);
+        startButton = (Button) view.findViewById(R.id.start_button);
         startButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -68,7 +80,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        stopButton = (Button) findViewById(R.id.stop_button);
+        stopButton = (Button) view.findViewById(R.id.stop_button);
         stopButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -76,40 +88,52 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        OpenLocate openLocate = OpenLocate.getInstance(getApplicationContext());
+        OpenLocate openLocate = OpenLocate.getInstance(activity);
         if (openLocate.isTracking()) {
             onStartService();
         }
+        return view;
+    }
+
+    @Override
+    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+        getActivity().setTitle(R.string.app_name);
     }
 
     private void startTracking() {
 
         try {
-            HashMap<String, String> headers = new HashMap<>();
-            headers.put("Authorization", "Bearer " + BuildConfig.TOKEN);
             Configuration configuration = new Configuration.Builder()
                     .setUrl(BuildConfig.URL)
-                    .setHeaders(headers)
+                    .setHeaders(getHeader())
                     .build();
-            OpenLocate openLocate = OpenLocate.getInstance(getApplicationContext());
+            OpenLocate openLocate = OpenLocate.getInstance(activity);
             openLocate.startTracking(configuration);
-            Toast.makeText(this, "Location service started", Toast.LENGTH_LONG).show();
+            Toast.makeText(activity, getString(R.string.sercive_started), Toast.LENGTH_LONG).show();
             onStartService();
         } catch (InvalidConfigurationException | LocationServiceConflictException | LocationConfigurationException e) {
-            Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show();
+            Toast.makeText(activity, e.getMessage(), Toast.LENGTH_LONG).show();
             Log.e(TAG, e.getMessage());
         } catch (LocationPermissionException e) {
             ActivityCompat.requestPermissions(
-                    this,
+                    activity,
                     new String[]{Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION},
                     LOCATION_PERMISSION
             );
         }
     }
 
+    private HashMap<String, String> getHeader() {
+        HashMap<String, String> headers = new HashMap<>();
+        headers.put("Authorization", "Bearer " + BuildConfig.TOKEN);
+
+        return headers;
+    }
+
     private void stopTracking() {
-        OpenLocate.getInstance(getApplicationContext()).stopTracking();
-        Toast.makeText(this, "Location service stopped", Toast.LENGTH_LONG).show();
+        OpenLocate.getInstance(activity).stopTracking();
+        Toast.makeText(activity, getString(R.string.sercive_stopped), Toast.LENGTH_LONG).show();
         onStopService();
     }
 
@@ -129,12 +153,12 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void onStartService() {
-        startButton.setEnabled(false);
-        stopButton.setEnabled(true);
+        startButton.setVisibility(View.GONE);
+        stopButton.setVisibility(View.VISIBLE);
     }
 
     private void onStopService() {
-        startButton.setEnabled(true);
-        stopButton.setEnabled(false);
+        startButton.setVisibility(View.VISIBLE);
+        stopButton.setVisibility(View.GONE);
     }
 }

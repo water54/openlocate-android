@@ -23,10 +23,17 @@ package com.openlocate.android.core;
 
 import android.content.Context;
 import android.content.Intent;
+import android.location.Location;
+import android.support.annotation.NonNull;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
 import com.google.android.gms.ads.identifier.AdvertisingIdClient;
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.openlocate.android.callbacks.OpenLocateLocationCallback;
 import com.openlocate.android.config.Configuration;
 import com.openlocate.android.exceptions.InvalidConfigurationException;
 import com.openlocate.android.exceptions.LocationConfigurationException;
@@ -39,6 +46,7 @@ public class OpenLocate implements OpenLocateLocationTracker {
     private static final String TAG = OpenLocate.class.getSimpleName();
 
     private Context context;
+    private FusedLocationProviderClient fusedLocationProviderClient;
 
     private long locationInterval = Constants.DEFAULT_LOCATION_INTERVAL;
     private long transmissionInterval = Constants.DEFAULT_TRANSMISSION_INTERVAL;
@@ -69,6 +77,51 @@ public class OpenLocate implements OpenLocateLocationTracker {
             @Override
             public void onAdvertisingInfoTaskExecute(AdvertisingIdClient.Info info) {
                 onFetchAdvertisingInfo(info, configuration);
+            }
+        });
+        task.execute();
+    }
+
+    @Override
+    public void getCurrentLocation(final OpenLocateLocationCallback callback) throws LocationConfigurationException, LocationPermissionException {
+        validateLocationPermission();
+        validateLocationEnabled();
+
+        fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(context);
+        try {
+            fusedLocationProviderClient.getLastLocation()
+                    .addOnSuccessListener(new OnSuccessListener<Location>() {
+                        @Override
+                        public void onSuccess(final Location location) {
+                            if (location == null) {
+                                callback.onError(new Error("Location cannot be fetched right now."));
+                            }
+
+                            onFetchCurrentLocation(location, callback);
+                        }
+                    })
+                    .addOnFailureListener(new OnFailureListener() {
+                        @Override
+                        public void onFailure(@NonNull Exception e) {
+                            callback.onError(new Error(e.getMessage()));
+                        }
+                    });
+        } catch (SecurityException e) {
+            throw new LocationPermissionException(
+                    "Location permission is denied. Please enable location permission."
+            );
+        }
+    }
+
+    private void onFetchCurrentLocation(final Location location, final OpenLocateLocationCallback callback) {
+        FetchAdvertisingInfoTask task = new FetchAdvertisingInfoTask(context, new FetchAdvertisingInfoTaskCallback() {
+            @Override
+            public void onAdvertisingInfoTaskExecute(AdvertisingIdClient.Info info) {
+                callback.onLocationFetch(
+                        new OpenLocateLocation(
+                                location, new AdvertisingInfo(info)
+                        )
+                );
             }
         });
         task.execute();

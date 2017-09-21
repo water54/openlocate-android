@@ -21,6 +21,8 @@
  */
 package com.openlocate.android.core;
 
+import com.google.android.gms.ads.identifier.AdvertisingIdClient;
+
 final class AdvertisingInfo {
 
     private String advertisingId;
@@ -37,5 +39,12 @@ final class AdvertisingInfo {
     AdvertisingInfo(String advertisingId, boolean isLimitedAdTrackingEnabled) {
         this.advertisingId = advertisingId.toLowerCase();
         this.isLimitedAdTrackingEnabled = isLimitedAdTrackingEnabled;
+    }
+
+    AdvertisingInfo(AdvertisingIdClient.Info info) {
+        if (info != null) {
+            this.advertisingId = info.getId().toLowerCase();
+            this.isLimitedAdTrackingEnabled = isLimitedAdTrackingEnabled();
+        }
     }
 }

@@ -28,7 +28,7 @@ import org.json.JSONObject;
 
 import java.util.concurrent.TimeUnit;
 
-final class OpenLocateLocation implements JsonObjectType {
+public final class OpenLocateLocation implements JsonObjectType {
 
     class Keys {
         static final String LATITUDE = "latitude";
@@ -138,5 +138,29 @@ final class OpenLocateLocation implements JsonObjectType {
         void setTimeStamp(long timeStamp) {
             this.timeStamp = timeStamp;
         }
+    }
+
+    public double getLatitude() {
+        return this.location.getLatitude();
+    }
+
+    public double getLongitude() {
+        return this.location.getLongitude();
+    }
+
+    public double getHorizontalAccuracy() {
+        return this.location.getHorizontalAccuracy();
+    }
+
+    public long getTimeStamp() {
+        return this.location.getTimeStamp();
+    }
+
+    public String getAdvertisingId() {
+        return this.advertisingInfo.getAdvertisingId();
+    }
+
+    public boolean isLimitedAdTrackingEnabled() {
+        return this.advertisingInfo.isLimitedAdTrackingEnabled();
     }
 }

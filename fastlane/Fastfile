@@ -70,8 +70,8 @@ platform :android do
       raise "No version specified!".red
     end
     
-    ensure_git_status_clean
-    ensure_git_branch
+    #ensure_git_status_clean
+    #ensure_git_branch
 
     version = lane[:version]
     gradle(task: "jarRelease publish")

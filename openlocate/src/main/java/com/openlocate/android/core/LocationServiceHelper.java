@@ -97,11 +97,6 @@ final class LocationServiceHelper {
         /* Starting the service as foreground service. If the service is not foreground,
         service will be killed when the app is killed.
          */
-
-        if (intent.getBooleanExtra(Constants.IS_TEST_KEY, false)) {
-            return;
-        }
-
         connectGoogleClient();
         startForeground();
     }
@@ -281,11 +276,9 @@ final class LocationServiceHelper {
     }
 
     private void startForeground() {
-        if (context.getClass().isInstance(LocationService.class)) {
-            Notification notification = new Notification.Builder(context)
+        Notification notification = new Notification.Builder(context)
                     .build();
-            ((LocationService) context).startForeground(FOREGROUND_SERVICE_TAG, notification);
-        }
+        ((LocationService) context).startForeground(FOREGROUND_SERVICE_TAG, notification);
     }
 
     private void resetLocationRequest() {

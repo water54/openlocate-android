@@ -19,36 +19,14 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.openlocate.android.core;
+package com.openlocate.example.callbacks;
 
-import java.io.IOException;
-import java.io.StringReader;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
 
-final class Utils {
+import com.openlocate.example.models.SafeGraphPlace;
 
-    static HashMap<String, String> hashMapFromString(String mapString) {
-        if (mapString == null || mapString.isEmpty()) {
-            return null;
-        }
+import java.util.List;
 
-        Properties properties = new Properties();
-        try {
-            properties.load(new StringReader(
-                    mapString.substring(1, mapString.length() - 1).replace(", ", "\n"))
-            );
-        } catch (IOException e) {
-            e.printStackTrace();
-            return null;
-        }
-
-        HashMap<String, String> map = new HashMap<>();
-        for (Map.Entry<Object, Object> entry: properties.entrySet()) {
-            map.put((String)entry.getKey(), (String)entry.getValue());
-        }
-
-        return map;
-    }
+public interface SafeGraphPlaceCallback {
+    void onSuccess(List<SafeGraphPlace> places);
+    void onFailure(Error error);
 }

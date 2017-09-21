@@ -60,8 +60,6 @@ public class LocationServiceHelperTests {
 //        intent.putExtra(Constants.LOCATION_INTERVAL_KEY, Constants.DEFAULT_LOCATION_INTERVAL);
 //        intent.putExtra(Constants.TRANSMISSION_INTERVAL_KEY, Constants.DEFAULT_TRANSMISSION_INTERVAL);
 //
-//        intent.putExtra(Constants.IS_TEST_KEY, true);
-//
 //        // When
 //        helper.onStartCommand(intent);
 //

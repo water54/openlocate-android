@@ -19,36 +19,11 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.openlocate.android.core;
+package com.openlocate.android.callbacks;
 
-import java.io.IOException;
-import java.io.StringReader;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
+import com.openlocate.android.core.OpenLocateLocation;
 
-final class Utils {
-
-    static HashMap<String, String> hashMapFromString(String mapString) {
-        if (mapString == null || mapString.isEmpty()) {
-            return null;
-        }
-
-        Properties properties = new Properties();
-        try {
-            properties.load(new StringReader(
-                    mapString.substring(1, mapString.length() - 1).replace(", ", "\n"))
-            );
-        } catch (IOException e) {
-            e.printStackTrace();
-            return null;
-        }
-
-        HashMap<String, String> map = new HashMap<>();
-        for (Map.Entry<Object, Object> entry: properties.entrySet()) {
-            map.put((String)entry.getKey(), (String)entry.getValue());
-        }
-
-        return map;
-    }
+public interface OpenLocateLocationCallback {
+    void onLocationFetch(OpenLocateLocation location);
+    void onError(Error error);
 }
