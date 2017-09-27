@@ -47,8 +47,8 @@ public class OpenLocate implements OpenLocateLocationTracker {
     private Context context;
     private FusedLocationProviderClient fusedLocationProviderClient;
 
-    private long locationInterval = Constants.DEFAULT_LOCATION_INTERVAL;
-    private long transmissionInterval = Constants.DEFAULT_TRANSMISSION_INTERVAL;
+    private long locationInterval = Constants.DEFAULT_LOCATION_INTERVAL_SEC;
+    private long transmissionInterval = Constants.DEFAULT_TRANSMISSION_INTERVAL_SEC;
     private LocationAccuracy accuracy = Constants.DEFAULT_LOCATION_ACCURACY;
 
     private OpenLocate(Context context) {
