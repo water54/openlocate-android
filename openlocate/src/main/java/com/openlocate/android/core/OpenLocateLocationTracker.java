@@ -24,19 +24,17 @@ package com.openlocate.android.core;
 import com.openlocate.android.callbacks.OpenLocateLocationCallback;
 import com.openlocate.android.config.Configuration;
 import com.openlocate.android.exceptions.InvalidConfigurationException;
-import com.openlocate.android.exceptions.LocationConfigurationException;
+import com.openlocate.android.exceptions.LocationDisabledException;
 import com.openlocate.android.exceptions.LocationPermissionException;
-import com.openlocate.android.exceptions.LocationServiceConflictException;
 
 interface OpenLocateLocationTracker {
     void startTracking(Configuration configuration)
             throws InvalidConfigurationException,
-            LocationServiceConflictException,
-            LocationConfigurationException,
+            LocationDisabledException,
             LocationPermissionException;
 
     void getCurrentLocation(OpenLocateLocationCallback callback)
-            throws LocationConfigurationException,
+            throws LocationDisabledException,
             LocationPermissionException;
 
     void stopTracking();

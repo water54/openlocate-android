@@ -40,9 +40,8 @@ import android.widget.Toast;
 import com.openlocate.android.config.Configuration;
 import com.openlocate.android.core.OpenLocate;
 import com.openlocate.android.exceptions.InvalidConfigurationException;
-import com.openlocate.android.exceptions.LocationConfigurationException;
+import com.openlocate.android.exceptions.LocationDisabledException;
 import com.openlocate.android.exceptions.LocationPermissionException;
-import com.openlocate.android.exceptions.LocationServiceConflictException;
 import com.openlocate.example.BuildConfig;
 import com.openlocate.example.R;
 import com.openlocate.example.activities.MainActivity;
@@ -112,7 +111,7 @@ public class TrackFragment extends Fragment {
             openLocate.startTracking(configuration);
             Toast.makeText(activity, getString(R.string.sercive_started), Toast.LENGTH_LONG).show();
             onStartService();
-        } catch (InvalidConfigurationException | LocationServiceConflictException | LocationConfigurationException e) {
+        } catch (InvalidConfigurationException | LocationDisabledException e) {
             Toast.makeText(activity, e.getMessage(), Toast.LENGTH_LONG).show();
             Log.e(TAG, e.getMessage());
         } catch (LocationPermissionException e) {

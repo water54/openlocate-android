@@ -36,9 +36,8 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import com.openlocate.android.callbacks.OpenLocateLocationCallback;
 import com.openlocate.android.config.Configuration;
 import com.openlocate.android.exceptions.InvalidConfigurationException;
-import com.openlocate.android.exceptions.LocationConfigurationException;
+import com.openlocate.android.exceptions.LocationDisabledException;
 import com.openlocate.android.exceptions.LocationPermissionException;
-import com.openlocate.android.exceptions.LocationServiceConflictException;
 
 public class OpenLocate implements OpenLocateLocationTracker {
 
@@ -65,13 +64,8 @@ public class OpenLocate implements OpenLocateLocationTracker {
     }
 
     @Override
-    public void startTracking(final Configuration configuration) throws InvalidConfigurationException, LocationServiceConflictException, LocationConfigurationException, LocationPermissionException {
-        boolean startTracking = hasTrackingCapabilities(configuration);
-
-        if (!startTracking) {
-            // TODO: do something here
-            return;
-        }
+    public void startTracking(final Configuration configuration) throws InvalidConfigurationException, LocationDisabledException, LocationPermissionException {
+        validateTrackingCapabilities(configuration);
 
         FetchAdvertisingInfoTask task = new FetchAdvertisingInfoTask(context, new FetchAdvertisingInfoTaskCallback() {
             @Override
@@ -83,7 +77,7 @@ public class OpenLocate implements OpenLocateLocationTracker {
     }
 
     @Override
-    public void getCurrentLocation(final OpenLocateLocationCallback callback) throws LocationConfigurationException, LocationPermissionException {
+    public void getCurrentLocation(final OpenLocateLocationCallback callback) throws LocationDisabledException, LocationPermissionException {
         validateLocationPermission();
         validateLocationEnabled();
 
@@ -152,12 +146,11 @@ public class OpenLocate implements OpenLocateLocationTracker {
         intent.putExtra(Constants.TRANSMISSION_INTERVAL_KEY, transmissionInterval);
     }
 
-    private boolean hasTrackingCapabilities(Configuration configuration) throws InvalidConfigurationException, IllegalStateException {
-        validateLocationService();
+    private void validateTrackingCapabilities(Configuration configuration) throws InvalidConfigurationException, LocationPermissionException, LocationDisabledException {
+        warnIfLocationServicesAreAlreadyRunning();
         validateConfiguration(configuration);
         validateLocationPermission();
         validateLocationEnabled();
-        return true;
     }
 
     private void validateConfiguration(Configuration configuration) throws InvalidConfigurationException {
@@ -171,14 +164,10 @@ public class OpenLocate implements OpenLocateLocationTracker {
         }
     }
 
-    private void validateLocationService() throws LocationServiceConflictException {
+    private void warnIfLocationServicesAreAlreadyRunning() {
         if (ServiceUtils.isServiceRunning(LocationService.class, context)) {
             String message = "Location tracking is already active. Please stop the previous tracking before starting,";
-
-            Log.e(TAG, message);
-            throw new LocationServiceConflictException(
-                    message
-            );
+            Log.w(TAG, message);
         }
     }
 
@@ -193,12 +182,12 @@ public class OpenLocate implements OpenLocateLocationTracker {
         }
     }
 
-    private void validateLocationEnabled() throws LocationConfigurationException {
+    private void validateLocationEnabled() throws LocationDisabledException {
         if (!LocationService.isLocationEnabled(context)) {
             String message = "Location is switched off in the settings. Please enable it before continuing.";
 
             Log.e(TAG, message);
-            throw new LocationConfigurationException(
+            throw new LocationDisabledException(
                     message
             );
         }
