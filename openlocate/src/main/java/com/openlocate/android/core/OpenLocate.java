@@ -117,9 +117,15 @@ public class OpenLocate implements OpenLocateLocationTracker {
         FetchAdvertisingInfoTask task = new FetchAdvertisingInfoTask(context, new FetchAdvertisingInfoTaskCallback() {
             @Override
             public void onAdvertisingInfoTaskExecute(AdvertisingIdClient.Info info) {
+
                 callback.onLocationFetch(
-                        new OpenLocateLocation(
-                                location, new AdvertisingInfo(info)
+                        OpenLocateLocation.from(
+                                location,
+                                info,
+                                DeviceInfo.from(context),
+                                NetworkInfo.from(context),
+                                LocationProvider.getLocationProvider(context),
+                                LocationContext.getLocationContext()
                         )
                 );
             }
