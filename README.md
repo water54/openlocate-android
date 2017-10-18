@@ -114,6 +114,114 @@ The following fields are collected by the SDK to be sent to a private or public 
 6. `ad_id` - Advertising identifier
 7. `ad_opt_out` - Limited ad tracking enabled flag
 
+### Using user's location to query 3rd party Places APIs
+
+To use user's current location, obtain the location by calling `getCurrentLocation` method on OpenLocate. Get the instance by calling `getInstance`. Use the fields collected by SDK to send to 3rd party APIs.
+
+#### For example, to obtain user location:
+
+```java
+OpenLocate openLocate = OpenLocate.getInstance(activity);
+
+openLocate.getCurrentLocation(new OpenLocateLocationCallback() {
+    @Override
+    public void onLocationFetch(OpenLocateLocation location) {
+        //Use location object to obtain fields and pass it to 3rd Party API
+    }
+
+    @Override
+    public void onError(Error error) {
+       //error
+    }
+});
+```
+
+#### For example, to query Google Places API using location:
+
+Google Places API: https://developers.google.com/places/web-service/search
+
+```java
+
+private Map<String, String> getQueryMapGoogle(OpenLocateLocation location ) {
+        Map<String, String> queryMap = new HashMap<>();
+        queryMap.put("location", String.valueOf(location.getLocation().getLatitude()) + "," + String.valueOf(location.getLocation().getLongitude()) );
+        queryMap.put("radius", "500");
+        queryMap.put("type", "restaurant");
+        queryMap.put("keyword", "south");
+        queryMap.put("key", -YOUR GOOGLE PLACES API KEY-);
+        return queryMap;
+}
+
+public void fetchGooglePlaces(OpenLocateLocation openLocateLocation, final SafeGraphPlaceCallback callback) {
+
+        GooglePlaceClient safeGraphPlaceClient = GooglePlaceClientGenerator.createClient(GooglePlaceClient.class);
+        Call<GooglePlaceBody> call=safeGraphPlaceClient.getNearByPlaces(getQueryMapGoogle(openLocateLocation));
+
+        call.enqueue(new Callback<GooglePlaceBody>() {
+            @Override
+            public void onResponse(Call<GooglePlaceBody> call, Response<GooglePlaceBody> response) {
+                if(response.isSuccessful()) {
+                     //TODO Do something with place.
+                }
+            }
+
+            @Override
+            public void onFailure(Call<GooglePlaceBody> call, Throwable t) {
+                    //Error
+            }
+        });
+}
+
+```
+
+#### For example, to query Safegraph Places API using location:
+
+SafeGraph Places API: https://developers.safegraph.com/docs/places.html
+
+```java
+
+private Map<String, String> getQueryMap(OpenLocateLocation location) {
+        Map<String, String> queryMap = new HashMap<>();
+        queryMap.put("advertising_id", location.getAdvertisingInfo().getId());
+        queryMap.put("advertising_id_type", "aaid");
+        queryMap.put("latitude", String.valueOf(location.getLocation().getLatitude()));
+        queryMap.put("longitude", String.valueOf(location.getLocation().getLongitude()));
+        queryMap.put("horizontal_accuracy", String.valueOf(location.getLocation().getHorizontalAccuracy()));
+        return queryMap;
+ }
+
+ private void fetchNearbyPlaces() {
+    // These classes can be found in the example app in this repo
+     SafeGraphPlaceClient safeGraphPlaceClient = ClientGenerator.createClient(SafeGraphPlaceClient.class);
+     Call<SafeGraphPlaceBody> call = safeGraphPlaceClient.getAllPlaces(getQueryMap(openLocateLocation));
+
+     call.enqueue(new Callback<SafeGraphPlaceBody>() {
+         @Override
+         public void onResponse(Call<SafeGraphPlaceBody> call, Response<SafeGraphPlaceBody> response) {
+
+             if (response.isSuccessful()) {
+                 List<SafeGraphPlace> places = response.body().getPlaceList();
+                 //TODO Do something with places
+             }
+         }
+
+         @Override
+         public void onFailure(Call<SafeGraphPlaceBody> call, Throwable t) {
+             //error
+         }
+     });
+ }
+
+```
+
+Similarly, OpenLocate SDK can be used to query additional APIs such as Facebook Places Graph or any other 3rd party places API.
+
+- Facebook Places API - https://developers.facebook.com/docs/places/
+
+#### Note
+
+ClientGenerator is created using Retrofit and its implementation code can found in example code.
+
 ## Communication
 
 - If you **need help**, post a question to the [discussion forum](https://groups.google.com/a/openlocate.org/d/forum/openlocate), or tag a question with 'OpenLocate' on [Stack Overflow](https://stackoverflow.com).
