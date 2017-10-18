@@ -112,7 +112,7 @@ The following fields are collected by the SDK to be sent to a private or public 
 4. `horizontal_accuracy` - The accuracy of the location being recorded
 5. `id_type` - 'aaid' for identifying android advertising type
 6. `ad_id` - Advertising identifier
-7. `ad_opt_out` - Limited ad tracking enabled flag
+7. `ad_opt_out` - Flag that indicates whether user has enabled "[limit ad tracking](https://developers.google.com/android/reference/com/google/android/gms/ads/identifier/AdvertisingIdClient.Info#isLimitAdTrackingEnabled())" (1: enabled; 0: not enabled)
 
 ### Using user's location to query 3rd party Places APIs
 
@@ -221,6 +221,52 @@ Similarly, OpenLocate SDK can be used to query additional APIs such as Facebook 
 #### Note
 
 ClientGenerator is created using Retrofit and its implementation code can found in example code.
+
+### Sample Request Body
+
+This is a sample request body sent by the SDK. 
+```json
+[
+  {
+    "ad_id": "12a451dd-3539-4092-b134-8cb0ef62ab8a",
+    "ad_opt_out": true,
+    "id_type": "idfa",
+    "latitude": "37.773972",
+    "longitude": "-122.431297",
+    "utc_timestamp": "1508356559",
+    "horizontal_accuracy": 12.323,
+    "vertical_accuracy": 5.3,
+    "altitude": 0.456,
+    "wifi_ssid": "OpenLocate_Guest",
+    "wifi_bssid": "OpenLocate_Guest",
+    "location_context": "regular",
+    "course": 175.0,
+    "speed": 11.032,
+    "is_charging": true,
+    "device_model": "iPhone 7",
+    "os_version": "iOS 11.0.3"
+  },
+  {
+    "ad_id": "12a451dd-3539-4092-b134-8cb0ef62ab8a",
+    "ad_opt_out": true,
+    "id_type": "idfa",
+    "latitude": "37.773972",
+    "longitude": "-122.431297",
+    "utc_timestamp": "1508356559",
+    "horizontal_accuracy": 12.323,
+    "vertical_accuracy": 5.3,
+    "altitude": 0.456,
+    "wifi_ssid": "OpenLocate_Guest",
+    "wifi_bssid": "OpenLocate_Guest",
+    "location_context": "regular",
+    "course": 175.0,
+    "speed": 11.032,
+    "is_charging": true,
+    "device_model": "iPhone 7",
+    "os_version": "iOS 11.0.3"
+  }
+]
+```
 
 ## Communication
 
