@@ -106,10 +106,17 @@ public class TrackFragment extends Fragment {
     private void startTracking() {
 
         try {
+
+            OpenLocate.initialize(
+                    new OpenLocate.Configuration.Builder(getActivity().getApplicationContext(), "")
+                            .setHeaders(getHeader())
+                            .build());
+
             Configuration configuration = new Configuration.Builder()
                     .setUrl(BuildConfig.URL)
                     .setHeaders(getHeader())
                     .build();
+
             OpenLocate openLocate = OpenLocate.getInstance(activity);
             openLocate.startTracking(configuration);
             Toast.makeText(activity, getString(R.string.sercive_started), Toast.LENGTH_LONG).show();

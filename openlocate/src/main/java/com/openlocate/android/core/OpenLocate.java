@@ -42,6 +42,8 @@ import com.openlocate.android.exceptions.InvalidConfigurationException;
 import com.openlocate.android.exceptions.LocationDisabledException;
 import com.openlocate.android.exceptions.LocationPermissionException;
 
+import java.util.HashMap;
+
 public class OpenLocate implements OpenLocateLocationTracker {
 
     private static final int PLAY_SERVICES_RESOLUTION_REQUEST = 9000;
@@ -50,19 +52,70 @@ public class OpenLocate implements OpenLocateLocationTracker {
     private static final String TAG = OpenLocate.class.getSimpleName();
 
     private Context context;
+    private String serverUrl;
+    private Configuration configuration;
+    private HashMap<String, String> headers;
+
+
     private FusedLocationProviderClient fusedLocationProviderClient;
 
     private long locationInterval = Constants.DEFAULT_LOCATION_INTERVAL_SEC;
     private long transmissionInterval = Constants.DEFAULT_TRANSMISSION_INTERVAL_SEC;
     private LocationAccuracy accuracy = Constants.DEFAULT_LOCATION_ACCURACY;
 
-    private OpenLocate(Context context) {
-        this.context = context;
+    /*
+        things to set with builder
+
+        context
+        URL
+        headers(optional)
+        configuration
+     */
+
+    public static final class Configuration {
+
+        final Context context;
+        final String serverUrl;
+        final HashMap<String, String> headers;
+
+        public static final class Builder {
+            private Context context;
+            private String serverUrl;
+            private HashMap<String, String> headers;
+
+            public Builder(Context context, String serverUrl) {
+                if (context != null) {
+                    this.context = context.getApplicationContext();
+                }
+                this.serverUrl = serverUrl;
+            }
+
+            public Builder setHeaders(HashMap<String, String> headers) {
+                this.headers = headers;
+                return this;
+            }
+
+            public Configuration build() {
+                new Configuration(this);
+            }
+        }
+
+        private Configuration(Builder builder) {
+            this.context = builder.context;
+            this.serverUrl = builder.serverUrl;
+            this.headers = builder.headers;
+        }
     }
 
-    public static OpenLocate getInstance(Context context) {
+    private OpenLocate(Configuration configuration) {
+            this.context = configuration.context;
+            this.serverUrl = configuration.serverUrl;
+            this.headers = configuration.headers;
+    }
+
+    public static OpenLocate initialize(Configuration configuration) {
         if (sharedInstance == null) {
-            sharedInstance = new OpenLocate(context);
+            sharedInstance = new OpenLocate(configuration);
         }
 
         return sharedInstance;
@@ -136,8 +189,8 @@ public class OpenLocate implements OpenLocateLocationTracker {
     private void onFetchAdvertisingInfo(AdvertisingIdClient.Info info, Configuration configuration) {
         Intent intent = new Intent(context, LocationService.class);
 
-        intent.putExtra(Constants.URL_KEY, configuration.getUrl());
-        intent.putExtra(Constants.HEADER_KEY, configuration.getHeaders());
+        intent.putExtra(Constants.URL_KEY, serverUrl);
+        intent.putExtra(Constants.HEADER_KEY, headers);
         updateLocationConfigurationInfo(intent);
 
         if (info != null) {
