@@ -23,6 +23,14 @@
             android:name="io.fabric.ApiKey"
             android:value="3a259bb69225f2b7332f54ad76b8093a6e369077" />
 
+        <meta-data
+            android:name="com.openlocate.SAFEGRAPH_TOKEN"
+            android:value="@string/SAFEGRAPH_TOKEN" />
+
+        <meta-data
+            android:name="com.openlocate.SAFEGRAPH_PROVIDER_KEY"
+            android:value="@string/SAFEGRAPH_PROVIDER_KEY" />
+
     </application>
 
 </manifest>
