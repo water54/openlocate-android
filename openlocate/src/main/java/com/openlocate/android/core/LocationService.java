@@ -55,7 +55,7 @@ public class LocationService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         helper.onStartCommand(intent);
-        return START_STICKY;
+        return START_REDELIVER_INTENT;
     }
 
     static boolean isLocationEnabled(Context context) throws IllegalStateException {
