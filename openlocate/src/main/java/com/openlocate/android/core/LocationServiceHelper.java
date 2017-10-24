@@ -21,8 +21,9 @@
  */
 package com.openlocate.android.core;
 
-import android.app.ActivityManager;
+import android.app.AlarmManager;
 import android.app.Notification;
+import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -34,7 +35,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
-import android.widget.Toast;
+import android.os.Build;
 
 import com.google.android.gms.ads.identifier.AdvertisingIdClient;
 import com.google.android.gms.common.ConnectionResult;
@@ -47,9 +48,6 @@ import com.google.android.gms.location.LocationServices;
 
 import java.util.HashMap;
 
-import static android.app.ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND;
-import static android.app.ActivityManager.RunningAppProcessInfo.IMPORTANCE_VISIBLE;
-
 final class LocationServiceHelper {
 
     private final static int FOREGROUND_SERVICE_TAG = 1001;
@@ -59,10 +57,11 @@ final class LocationServiceHelper {
 
     private GoogleApiClient googleApiClient;
     private GcmNetworkManager networkManager;
+    private AlarmManager alarmManager;
 
-    private long locationRequestIntervalInSecs;
-    private long transmissionIntervalInSecs;
-    private LocationAccuracy accuracy;
+    private long locationRequestIntervalInSecs = Constants.DEFAULT_LOCATION_INTERVAL_SEC;
+    private long transmissionIntervalInSecs = Constants.DEFAULT_TRANSMISSION_INTERVAL_SEC;
+    private LocationAccuracy accuracy = Constants.DEFAULT_LOCATION_ACCURACY;
 
     private LocationDataSource locations;
     private LocationServiceHelper.LocationListener locationListener;
@@ -70,7 +69,7 @@ final class LocationServiceHelper {
     private String url;
     private HashMap<String, String> headers;
 
-    private AdvertisingIdClient.Info advertisingInfo;
+    private AdvertisingIdClient.Info advertisingInfo = new AdvertisingIdClient.Info("", true);
 
     private Context context;
 
@@ -82,6 +81,7 @@ final class LocationServiceHelper {
         SQLiteOpenHelper helper = new DatabaseHelper(context);
         locations = new LocationDatabase(helper);
         networkManager = GcmNetworkManager.getInstance(context);
+        alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
 
         registerForLocalBroadcastEvents();
     }
@@ -98,13 +98,22 @@ final class LocationServiceHelper {
     }
 
     void onStartCommand(Intent intent) {
+        if (intent.getExtras().getBoolean("is_alarm")) {
+            if (googleApiClient == null || !googleApiClient.isConnected()) {
+                connectGoogleClient();
+            }
+            return;
+        }
         setValues(intent);
 
-        /* Starting the service as foreground service. If the service is not foreground,
-        service will be killed when the app is killed.
-         */
         connectGoogleClient();
-        startForeground();
+
+        /* Starting the service as foreground service for Android Oreo.
+         * If the service is not foreground, service will be killed when the app is killed.
+         */
+        if (Build.VERSION.SDK_INT >= 26) {
+            startForeground();
+        }
     }
 
     private BroadcastReceiver locationIntervalChangedReceiver = new BroadcastReceiver() {
@@ -185,8 +194,6 @@ final class LocationServiceHelper {
             googleApiClient.connect();
             return;
         }
-
-        startLocationUpdates();
     }
 
     private LocationRequest getLocationRequest() {
@@ -205,6 +212,12 @@ final class LocationServiceHelper {
             locationListener = new LocationListener();
             LocationServices.FusedLocationApi.requestLocationUpdates(googleApiClient, request, locationListener);
             schedulePeriodicTasks();
+
+            Intent intent = new Intent(context, LocationService.class);
+            intent.putExtra("is_alarm", true);
+
+            PendingIntent pendingIntent = PendingIntent.getService(context, 0, intent, 0);
+            alarmManager.setInexactRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP, 60000, 60000, pendingIntent);
         } catch (SecurityException e) {
             locationListener = null;
             Log.e(TAG, e.getMessage());

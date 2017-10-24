@@ -69,14 +69,18 @@ final class NetworkInfo {
 
     private void updateConnectionType(Context context) {
         ConnectivityManager connectivityManager = (ConnectivityManager) context.getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);
-        boolean connected = connectivityManager.getActiveNetworkInfo().isConnected();
+        boolean connected = false;
+        android.net.NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
+        if (activeNetworkInfo != null && activeNetworkInfo.isConnected()) {
+            connected = true;
+        }
 
         if (!connected) {
             connectionType = "none";
             return;
         }
 
-        int type = connectivityManager.getActiveNetworkInfo().getType();
+        int type = activeNetworkInfo.getType();
 
         switch (type) {
             case ConnectivityManager.TYPE_WIFI:
