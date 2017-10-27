@@ -4,24 +4,23 @@ apply plugin: 'jacoco'
 apply plugin: 'maven-publish'
 
 ext {
-    bintrayRepo = 'OpenLocate'
-    bintrayName = 'openlocate-android'
+    bintrayRepo = 'openlocate'
+    bintrayName = 'openlocate'
 
     publishedGroupId = 'com.openlocate'
-    libraryName = 'openlocate-android'
-    artifact = 'openlocate-android'
+    libraryName = 'openlocate'
+    artifact = 'openlocate'
 
     libraryDescription = 'OpenLocate is an open source Android and iOS SDK for mobile location collection.'
 
     siteUrl = 'https://github.com/OpenLocate/openlocate-android'
     gitUrl = 'https://github.com/OpenLocate/openlocate-android.git'
 
-    libraryVersion = '0.1.9'
+    libraryVersion = '0.1.11'
 
     developerId = 'openlocate'
     developerName = 'OpenLocate'
     developerEmail = 'info@openlocate.com'
-    bintrayUserOrg = 'openlocate'
 
     licenseName = 'MIT'
     licenseUrl = 'https://github.com/OpenLocate/openlocate-android/blob/master/LICENSE'
@@ -78,103 +77,5 @@ dependencies {
     testCompile 'org.json:json:20170516'
 }
 
-version = libraryVersion
-
-if (project.hasProperty("android")) { // Android libraries
-    task sourcesJar(type: Jar) {
-        classifier = 'sources'
-        from android.sourceSets.main.java.srcDirs
-    }
-
-    task javadoc(type: Javadoc) {
-        source = android.sourceSets.main.java.srcDirs
-        classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
-    }
-} else { // Java libraries
-    task sourcesJar(type: Jar, dependsOn: classes) {
-        classifier = 'sources'
-        from sourceSets.main.allSource
-    }
-}
-
-task javadocJar(type: Jar, dependsOn: javadoc) {
-    classifier = 'javadoc'
-    from javadoc.destinationDir
-}
-
-artifacts {
-    archives javadocJar
-    archives sourcesJar
-}
-
-// Bintray
-Properties properties = new Properties()
-properties.load(project.rootProject.file('local.properties').newDataInputStream())
-
-bintray {
-    user = properties.getProperty("bintray.user")
-    key = properties.getProperty("bintray.apikey")
-
-    configurations = ['archives']
-    pkg {
-        repo = bintrayRepo
-        name = bintrayName
-        vcsUrl = gitUrl
-        licenses = allLicenses
-        publish = true
-        userOrg = bintrayUserOrg
-    }
-}
-
-task jacocoTestReport(type: JacocoReport, dependsOn: ['testDebugUnitTest', 'createDebugCoverageReport']) {
-
-    reports {
-        xml.enabled = true
-        html.enabled = true
-    }
-
-    def fileFilter = ['**/R.class', '**/R$*.class', '**/BuildConfig.*', '**/Manifest*.*', '**/*Test*.*', 'android/**/*.*']
-    def debugTree = fileTree(dir: "${buildDir}/intermediates/classes/debug", excludes: fileFilter)
-    def mainSrc = "${project.projectDir}/src/main/java"
-
-    sourceDirectories = files([mainSrc])
-    classDirectories = files([debugTree])
-    executionData = fileTree(dir: "$buildDir", includes: [
-            "jacoco/testDebugUnitTest.exec",
-            "outputs/code-coverage/connected/*coverage.ec"
-    ])
-}
-
-publishing {
-    repositories {
-        maven {
-            url "s3://openlocate-android"
-            credentials(AwsCredentials) {
-                accessKey "${properties.getProperty("aws.accessKey")}"
-                secretKey "${properties.getProperty("aws.secretKey")}"
-            }
-        }
-    }
-
-    publications {
-        mavenJava(MavenPublication) {
-            version = project.version
-            artifactId = project.name
-            groupId = project.group
-            artifact("$buildDir/outputs/aar/${project.name}-release.aar")
-
-            //generate pom nodes for dependencies
-            pom.withXml {
-                def dependenciesNode = asNode().appendNode('dependencies')
-                configurations.compile.allDependencies.each { dependency ->
-                    def dependencyNode = dependenciesNode.appendNode('dependency')
-                    dependencyNode.appendNode('groupId', dependency.group)
-                    dependencyNode.appendNode('artifactId', dependency.name)
-                    dependencyNode.appendNode('version', dependency.version)
-                }
-            }
-        }
-    }
-}
-
 apply from: 'https://raw.githubusercontent.com/nuuneoi/JCenter/master/installv1.gradle'
+apply from: 'https://raw.githubusercontent.com/nuuneoi/JCenter/master/bintrayv1.gradle'
