@@ -55,6 +55,7 @@ public class OpenLocate implements OpenLocateLocationTracker {
     private long locationInterval = Constants.DEFAULT_LOCATION_INTERVAL_SEC;
     private long transmissionInterval = Constants.DEFAULT_TRANSMISSION_INTERVAL_SEC;
     private LocationAccuracy accuracy = Constants.DEFAULT_LOCATION_ACCURACY;
+    private Configuration configuration;
 
     private OpenLocate(Context context) {
         this.context = context;
@@ -122,10 +123,7 @@ public class OpenLocate implements OpenLocateLocationTracker {
                         OpenLocateLocation.from(
                                 location,
                                 info,
-                                DeviceInfo.from(context),
-                                NetworkInfo.from(context),
-                                LocationProvider.getLocationProvider(context),
-                                LocationContext.getLocationContext()
+                                InformationFieldsFactory.collectInformationFields(context, configuration)
                         )
                 );
             }
@@ -139,12 +137,17 @@ public class OpenLocate implements OpenLocateLocationTracker {
         intent.putExtra(Constants.URL_KEY, configuration.getUrl());
         intent.putExtra(Constants.HEADER_KEY, configuration.getHeaders());
         updateLocationConfigurationInfo(intent);
+        updateFieldsConfigurationInfo(intent, configuration);
 
         if (info != null) {
             updateAdvertisingInfo(intent, info.getId(), info.isLimitAdTrackingEnabled());
         }
 
         context.startService(intent);
+    }
+
+    private void updateFieldsConfigurationInfo(Intent intent, Configuration configuration) {
+       intent.putExtra(Constants.INTENT_CONFIGURATION,configuration);
     }
 
     private void updateAdvertisingInfo(Intent intent, String advertisingId, boolean isLimitedAdTrackingEnabled) {

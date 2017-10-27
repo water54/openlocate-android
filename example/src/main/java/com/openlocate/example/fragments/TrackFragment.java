@@ -110,6 +110,7 @@ public class TrackFragment extends Fragment {
                     .setUrl(BuildConfig.URL)
                     .setHeaders(getHeader())
                     .build();
+
             OpenLocate openLocate = OpenLocate.getInstance(activity);
             openLocate.startTracking(configuration);
             Toast.makeText(activity, getString(R.string.sercive_started), Toast.LENGTH_LONG).show();
