@@ -22,9 +22,9 @@
 package com.openlocate.android.core;
 
 import android.location.Location;
+import android.text.TextUtils;
 
 import com.google.android.gms.ads.identifier.AdvertisingIdClient;
-
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -48,7 +48,7 @@ public final class OpenLocateLocation implements JsonObjectType {
         static final String IS_CHARGING = "is_charging";
         static final String DEVICE_MANUFACTURER = "device_manufacturer";
         static final String DEVICE_MODEL = "device_model";
-        static final String OPERATING_SYSTEM = "os";
+        static final String OPERATING_SYSTEM = "os_version";
 
         static final String LOCATION_METHOD = "location_method";
         static final String LOCATION_CONTEXT = "location_context";
@@ -63,10 +63,7 @@ public final class OpenLocateLocation implements JsonObjectType {
 
     private LocationInfo location;
     private AdvertisingIdClient.Info advertisingInfo;
-    private DeviceInfo deviceInfo;
-    private NetworkInfo networkInfo;
-    private LocationProvider provider;
-    private LocationContext locationContext;
+    private InformationFields informationFields;
 
     public LocationInfo getLocation() {
         return location;
@@ -84,63 +81,20 @@ public final class OpenLocateLocation implements JsonObjectType {
         this.advertisingInfo = advertisingInfo;
     }
 
-    public DeviceInfo getDeviceInfo() {
-        return deviceInfo;
-    }
 
-    public void setDeviceInfo(DeviceInfo deviceInfo) {
-        this.deviceInfo = deviceInfo;
-    }
-
-    public NetworkInfo getNetworkInfo() {
-        return networkInfo;
-    }
-
-    public void setNetworkInfo(NetworkInfo networkInfo) {
-        this.networkInfo = networkInfo;
-    }
-
-    public LocationProvider getProvider() {
-        return provider;
-    }
-
-    public void setProvider(LocationProvider provider) {
-        this.provider = provider;
-    }
-
-    @Override
-    public String toString() {
-        return "OpenLocateLocation{" +
-                "location=" + location +
-                ", advertisingInfo=" + advertisingInfo +
-                ", deviceInfo=" + deviceInfo +
-                ", networkInfo=" + networkInfo +
-                ", provider=" + provider +
-                ", locationContext=" + locationContext +
-                '}';
-    }
 
     public static OpenLocateLocation from(Location location,
-                                          AdvertisingIdClient.Info advertisingInfo,
-                                          DeviceInfo deviceInfo,
-                                          NetworkInfo networkInfo,
-                                          LocationProvider provider, LocationContext locationContext) {
-        return new OpenLocateLocation(location, advertisingInfo, deviceInfo, networkInfo, provider, locationContext);
+                                          AdvertisingIdClient.Info advertisingInfo, InformationFields informationFields) {
+        return new OpenLocateLocation(location, advertisingInfo, informationFields);
 
     }
 
     private OpenLocateLocation(
             Location location,
-            AdvertisingIdClient.Info advertisingInfo,
-            DeviceInfo deviceInfo,
-            NetworkInfo networkInfo,
-            LocationProvider provider, LocationContext locationContext) {
+            AdvertisingIdClient.Info advertisingInfo, InformationFields informationFields) {
         this.location = new LocationInfo(location);
         this.advertisingInfo = advertisingInfo;
-        this.deviceInfo = deviceInfo;
-        this.networkInfo = networkInfo;
-        this.provider = provider;
-        this.locationContext = locationContext;
+        this.informationFields = informationFields;
     }
 
     OpenLocateLocation(String jsonString) {
@@ -156,29 +110,63 @@ public final class OpenLocateLocation implements JsonObjectType {
             location.setCourse(Float.parseFloat(json.getString(Keys.COURSE)));
             location.setSpeed(Float.parseFloat(json.getString(Keys.SPEED)));
 
+            String deviceManufacturer = "";
+            if (json.has(Keys.DEVICE_MANUFACTURER)) {
+                deviceManufacturer = json.getString(Keys.DEVICE_MANUFACTURER);
+            }
+
+
+            String deviceModel = "";
+            if (json.has(Keys.DEVICE_MODEL)) {
+                deviceModel = json.getString(Keys.DEVICE_MODEL);
+            }
+
+            String chargingState = "";
+            if (json.has(Keys.IS_CHARGING)) {
+                chargingState = json.getString(Keys.IS_CHARGING);
+            }
+
+            String operatingSystem = "";
+            if (json.has(Keys.OPERATING_SYSTEM)) {
+                operatingSystem = json.getString(Keys.OPERATING_SYSTEM);
+            }
+
+            String carrierName = "";
+            if (json.has(Keys.CARRIER_NAME)) {
+                carrierName = json.getString(Keys.CARRIER_NAME);
+            }
+
+            String wifiSSID = "";
+            if (json.has(Keys.WIFI_SSID)) {
+                wifiSSID = json.getString(Keys.WIFI_SSID);
+            }
+
+            String wifiBSSID = "";
+            if (json.has(Keys.WIFI_BSSID)) {
+                wifiBSSID = json.getString(Keys.WIFI_BSSID);
+            }
+
+            String connectionType = "";
+            if (json.has(Keys.CONNECTION_TYPE)) {
+                connectionType = json.getString(Keys.CONNECTION_TYPE);
+            }
+
+            String locationMethod = "";
+            if (json.has(Keys.LOCATION_METHOD)) {
+                locationMethod = json.getString(Keys.LOCATION_METHOD);
+            }
+
+            String locationContext = "";
+            if (json.has(Keys.LOCATION_CONTEXT)) {
+                locationContext = json.getString(Keys.LOCATION_CONTEXT);
+            }
+
+            informationFields = InformationFieldsFactory.getInformationFields(deviceManufacturer, deviceModel, chargingState, operatingSystem, carrierName, wifiSSID, wifiBSSID, connectionType, locationMethod, locationContext);
+
             advertisingInfo = new AdvertisingIdClient.Info(
                     json.getString(Keys.AD_ID),
                     json.getBoolean(Keys.AD_OPT_OUT)
             );
-
-            deviceInfo = DeviceInfo.from(
-                    json.getString(Keys.DEVICE_MANUFACTURER),
-                    json.getString(Keys.DEVICE_MODEL),
-                    json.getString(Keys.OPERATING_SYSTEM),
-                    json.getBoolean(Keys.IS_CHARGING)
-            );
-
-            networkInfo = NetworkInfo.from(
-                    json.getString(Keys.CARRIER_NAME),
-                    json.getString(Keys.WIFI_SSID),
-                    json.getString(Keys.WIFI_BSSID),
-                    json.getString(Keys.CONNECTION_TYPE)
-            );
-
-            provider = LocationProvider.get(json.getString(Keys.LOCATION_METHOD));
-
-            locationContext = LocationContext.get(json.getString(Keys.LOCATION_CONTEXT));
-
 
         } catch (JSONException exception) {
             exception.printStackTrace();
@@ -198,23 +186,46 @@ public final class OpenLocateLocation implements JsonObjectType {
                     .put(Keys.COURSE, String.valueOf(location.getCourse()))
                     .put(Keys.SPEED, String.valueOf(location.getSpeed()))
                     .put(Keys.ALTITUDE, location.getAltitude())
-
                     .put(Keys.AD_ID, advertisingInfo.getId())
                     .put(Keys.AD_OPT_OUT, advertisingInfo.isLimitAdTrackingEnabled())
-                    .put(Keys.AD_TYPE, ADVERTISING_ID_TYPE)
+                    .put(Keys.AD_TYPE, ADVERTISING_ID_TYPE);
 
-                    .put(Keys.DEVICE_MANUFACTURER, deviceInfo.getManufacturer())
-                    .put(Keys.DEVICE_MODEL, deviceInfo.getModel())
-                    .put(Keys.IS_CHARGING, deviceInfo.isCharging())
-                    .put(Keys.OPERATING_SYSTEM, deviceInfo.getOperatingSystem())
+            if(!TextUtils.isEmpty(informationFields.getManufacturer()))
+                jsonObject.put(Keys.DEVICE_MANUFACTURER, informationFields.getManufacturer());
 
-                    .put(Keys.CARRIER_NAME, networkInfo.getCarrierName())
-                    .put(Keys.WIFI_SSID, networkInfo.getWifiSsid())
-                    .put(Keys.WIFI_BSSID, networkInfo.getWifiBssid())
-                    .put(Keys.CONNECTION_TYPE, networkInfo.getConnectionType())
 
-                    .put(Keys.LOCATION_METHOD, provider.getValue())
-                    .put(Keys.LOCATION_CONTEXT, locationContext.getValue());
+            if(!TextUtils.isEmpty(informationFields.getModel())) {
+                jsonObject.put(Keys.DEVICE_MODEL, informationFields.getModel());
+            }
+
+            if(!TextUtils.isEmpty(informationFields.isCharging())) {
+                jsonObject.put(Keys.IS_CHARGING, informationFields.isCharging());
+            }
+
+            if(!TextUtils.isEmpty(informationFields.getOperatingSystem())) {
+                jsonObject.put(Keys.OPERATING_SYSTEM, informationFields.getOperatingSystem());
+            }
+
+            if(!TextUtils.isEmpty(informationFields.getCarrierName())) {
+                jsonObject.put(Keys.CARRIER_NAME, informationFields.getCarrierName());
+            }
+
+            if(!(TextUtils.isEmpty(informationFields.getWifiSsid()) && TextUtils.isEmpty(informationFields.getWifiBssid()))) {
+                jsonObject.put(Keys.WIFI_SSID, informationFields.getWifiSsid());
+                jsonObject.put(Keys.WIFI_BSSID, informationFields.getWifiBssid());
+            }
+
+            if(!TextUtils.isEmpty(informationFields.getConnectionType())) {
+                jsonObject.put(Keys.CONNECTION_TYPE, informationFields.getConnectionType());
+            }
+
+            if(!TextUtils.isEmpty(informationFields.getLocationProvider().getValue())) {
+                jsonObject.put(Keys.LOCATION_METHOD, informationFields.getLocationProvider().getValue());
+            }
+
+            if(!TextUtils.isEmpty(informationFields.getLocationContext().getValue())) {
+                jsonObject.put(Keys.LOCATION_CONTEXT, informationFields.getLocationContext().getValue());
+            }
         } catch (NullPointerException | JSONException e) {
             e.printStackTrace();
         }
@@ -316,4 +327,12 @@ public final class OpenLocateLocation implements JsonObjectType {
         }
     }
 
+    @Override
+    public String toString() {
+        return "OpenLocateLocation{" +
+                "location=" + location +
+                ", advertisingInfo=" + advertisingInfo +
+                ", informationFields=" + informationFields +
+                '}';
+    }
 }

@@ -94,7 +94,6 @@ public class TrackFragment extends Fragment {
         if (openLocate != null && openLocate.isTracking()) {
             onStartService();
         }
-
         return view;
     }
 

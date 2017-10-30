@@ -53,4 +53,5 @@ interface OpenLocateLocationTracker {
     LocationAccuracy getAccuracy();
 
     void setAccuracy(LocationAccuracy accuracy);
+
 }
