@@ -23,6 +23,7 @@ package com.openlocate.android.core;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.location.Location;
 import android.os.Parcel;
 import android.os.Parcelable;
@@ -271,13 +272,20 @@ public class OpenLocate implements OpenLocateLocationTracker {
             this.serverUrl = configuration.serverUrl;
             this.headers = configuration.headers;
             this.configuration = configuration;
+            setPreferences();
+    }
+
+    private void setPreferences() {
+        SharedPreferences preferences = context.getSharedPreferences(Constants.OPENLOCATE, Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = preferences.edit();
+        editor.putString(Constants.URL_KEY, configuration.getUrl());
+        editor.apply();
     }
 
     public static OpenLocate initialize(Configuration configuration) {
         if (sharedInstance == null) {
             sharedInstance = new OpenLocate(configuration);
         }
-
         return sharedInstance;
     }
 
@@ -363,6 +371,14 @@ public class OpenLocate implements OpenLocateLocationTracker {
         }
 
         context.startService(intent);
+        setStartedPreferences();
+    }
+
+    private void setStartedPreferences() {
+        SharedPreferences preferences = context.getSharedPreferences(Constants.OPENLOCATE, Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = preferences.edit();
+        editor.putBoolean(Constants.IS_SERVICE_STARTED, true);
+        editor.apply();
     }
 
     private void updateFieldsConfigurationInfo(Intent intent) {
