@@ -39,7 +39,6 @@ import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
-import com.openlocate.android.config.Configuration;
 import com.openlocate.android.core.OpenLocate;
 import com.openlocate.android.exceptions.GooglePlayServicesNotAvailable;
 import com.openlocate.android.exceptions.InvalidConfigurationException;
@@ -90,10 +89,12 @@ public class TrackFragment extends Fragment {
             }
         });
 
-        OpenLocate openLocate = OpenLocate.getInstance(activity);
-        if (openLocate.isTracking()) {
+
+        OpenLocate openLocate = OpenLocate.getInstance();
+        if (openLocate != null && openLocate.isTracking()) {
             onStartService();
         }
+
         return view;
     }
 
@@ -107,18 +108,8 @@ public class TrackFragment extends Fragment {
 
         try {
 
-            OpenLocate.initialize(
-                    new OpenLocate.Configuration.Builder(getActivity().getApplicationContext(), "")
-                            .setHeaders(getHeader())
-                            .build());
+            OpenLocate.getInstance().startTracking();
 
-            Configuration configuration = new Configuration.Builder()
-                    .setUrl(BuildConfig.URL)
-                    .setHeaders(getHeader())
-                    .build();
-
-            OpenLocate openLocate = OpenLocate.getInstance(activity);
-            openLocate.startTracking(configuration);
             Toast.makeText(activity, getString(R.string.sercive_started), Toast.LENGTH_LONG).show();
             onStartService();
         } catch (InvalidConfigurationException | LocationDisabledException e) {
@@ -139,15 +130,8 @@ public class TrackFragment extends Fragment {
         }
     }
 
-    private HashMap<String, String> getHeader() {
-        HashMap<String, String> headers = new HashMap<>();
-        headers.put("Authorization", "Bearer " + BuildConfig.TOKEN);
-
-        return headers;
-    }
-
     private void stopTracking() {
-        OpenLocate.getInstance(activity).stopTracking();
+        OpenLocate.getInstance().stopTracking();
         Toast.makeText(activity, getString(R.string.sercive_stopped), Toast.LENGTH_LONG).show();
         onStopService();
     }

@@ -26,6 +26,7 @@ import android.content.Intent;
 import android.location.Location;
 import android.support.annotation.NonNull;
 import android.support.v4.content.LocalBroadcastManager;
+import android.text.TextUtils;
 import android.util.Log;
 
 import com.google.android.gms.ads.identifier.AdvertisingIdClient;
@@ -36,7 +37,6 @@ import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.openlocate.android.callbacks.OpenLocateLocationCallback;
-import com.openlocate.android.config.Configuration;
 import com.openlocate.android.exceptions.GooglePlayServicesNotAvailable;
 import com.openlocate.android.exceptions.InvalidConfigurationException;
 import com.openlocate.android.exceptions.LocationDisabledException;
@@ -63,15 +63,6 @@ public class OpenLocate implements OpenLocateLocationTracker {
     private long transmissionInterval = Constants.DEFAULT_TRANSMISSION_INTERVAL_SEC;
     private LocationAccuracy accuracy = Constants.DEFAULT_LOCATION_ACCURACY;
 
-    /*
-        things to set with builder
-
-        context
-        URL
-        headers(optional)
-        configuration
-     */
-
     public static final class Configuration {
 
         final Context context;
@@ -96,7 +87,7 @@ public class OpenLocate implements OpenLocateLocationTracker {
             }
 
             public Configuration build() {
-                new Configuration(this);
+                return new Configuration(this);
             }
         }
 
@@ -111,6 +102,7 @@ public class OpenLocate implements OpenLocateLocationTracker {
             this.context = configuration.context;
             this.serverUrl = configuration.serverUrl;
             this.headers = configuration.headers;
+            this.configuration = configuration;
     }
 
     public static OpenLocate initialize(Configuration configuration) {
@@ -121,15 +113,22 @@ public class OpenLocate implements OpenLocateLocationTracker {
         return sharedInstance;
     }
 
+    public static OpenLocate getInstance() throws IllegalStateException {
+        if (sharedInstance == null) {
+            throw new IllegalStateException("OpenLate SDK must be initialized using initialize method");
+        }
+        return sharedInstance;
+    }
+
     @Override
-    public void startTracking(final Configuration configuration)
+    public void startTracking()
             throws InvalidConfigurationException, LocationDisabledException, LocationPermissionException, GooglePlayServicesNotAvailable {
-        validateTrackingCapabilities(configuration);
+        validateTrackingCapabilities();
 
         FetchAdvertisingInfoTask task = new FetchAdvertisingInfoTask(context, new FetchAdvertisingInfoTaskCallback() {
             @Override
             public void onAdvertisingInfoTaskExecute(AdvertisingIdClient.Info info) {
-                onFetchAdvertisingInfo(info, configuration);
+                onFetchAdvertisingInfo(info);
             }
         });
         task.execute();
@@ -186,7 +185,7 @@ public class OpenLocate implements OpenLocateLocationTracker {
         task.execute();
     }
 
-    private void onFetchAdvertisingInfo(AdvertisingIdClient.Info info, Configuration configuration) {
+    private void onFetchAdvertisingInfo(AdvertisingIdClient.Info info) {
         Intent intent = new Intent(context, LocationService.class);
 
         intent.putExtra(Constants.URL_KEY, serverUrl);
@@ -211,18 +210,18 @@ public class OpenLocate implements OpenLocateLocationTracker {
         intent.putExtra(Constants.TRANSMISSION_INTERVAL_KEY, transmissionInterval);
     }
 
-    private void validateTrackingCapabilities(Configuration configuration)
+    private void validateTrackingCapabilities()
             throws InvalidConfigurationException, LocationPermissionException, LocationDisabledException, GooglePlayServicesNotAvailable {
 
         validateGooglePlayServices();
         warnIfLocationServicesAreAlreadyRunning();
-        validateConfiguration(configuration);
+        validateConfiguration();
         validateLocationPermission();
         validateLocationEnabled();
     }
 
-    private void validateConfiguration(Configuration configuration) throws InvalidConfigurationException {
-        if (!configuration.isValid()) {
+    private void validateConfiguration() throws InvalidConfigurationException {
+        if (TextUtils.isEmpty(configuration.serverUrl)) {
             String message = "Invalid configuration. Please configure a valid url or header.";
 
             Log.e(TAG, message);
