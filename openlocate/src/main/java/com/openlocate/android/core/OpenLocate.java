@@ -26,6 +26,7 @@ import android.content.Intent;
 import android.location.Location;
 import android.support.annotation.NonNull;
 import android.support.v4.content.LocalBroadcastManager;
+import android.text.TextUtils;
 import android.util.Log;
 
 import com.google.android.gms.ads.identifier.AdvertisingIdClient;
@@ -177,6 +178,12 @@ public class OpenLocate implements OpenLocateLocationTracker {
                     message
             );
         }
+
+        if(!TextUtils.isEmpty(configuration.getUrl())) {
+            SharedPreferenceUtils.getInstance(context).setValue(Constants.URL_KEY, configuration.getUrl());
+            SharedPreferenceUtils.getInstance(context).saveMap(Constants.HEADER_KEY, configuration.getHeaders());
+        }
+
     }
 
     private void warnIfLocationServicesAreAlreadyRunning() {

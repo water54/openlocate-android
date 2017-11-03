@@ -29,10 +29,12 @@ import android.content.pm.PackageManager;
 import android.os.IBinder;
 import android.provider.Settings;
 import android.support.v4.content.ContextCompat;
+import android.util.Log;
 
 public class LocationService extends Service {
 
     LocationServiceHelper helper;
+    public static final String TAG = LocationService.class.getSimpleName();
 
     @Override
     public IBinder onBind(Intent intent) {
@@ -44,18 +46,27 @@ public class LocationService extends Service {
         super.onCreate();
         this.helper = new LocationServiceHelper(this);
         helper.onCreate();
+        Log.d(TAG, "Inside onCreate of Location service ");
     }
 
     @Override
     public void onDestroy() {
-        helper.onDestroy();
         super.onDestroy();
+        helper.onDestroy();
+        Log.d(TAG, "Inside onDestroy of Location service ");
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         helper.onStartCommand(intent);
+        Log.d(TAG, "Inside onStartCommand of Location service ");
         return START_REDELIVER_INTENT;
+    }
+
+    @Override
+    public void onTaskRemoved(Intent rootIntent) {
+        super.onTaskRemoved(rootIntent);
+        helper.onTaskRemoved(rootIntent);
     }
 
     static boolean isLocationEnabled(Context context) throws IllegalStateException {

@@ -32,4 +32,9 @@ final class LocationList implements LocationDataSource {
     public long size() {
         return this.locations.size();
     }
+
+    @Override
+    public void close() {
+
+    }
 }

@@ -32,6 +32,7 @@ final class Constants {
     // Location service intent keys
     static final String URL_KEY = "url";
     static final String HEADER_KEY = "header";
+    static final String SERVICE_STATUS = "service_status";
 
     static final String LOCATION_ACCURACY_KEY = "location_accuracy";
     static final String LOCATION_INTERVAL_KEY = "location_interval";

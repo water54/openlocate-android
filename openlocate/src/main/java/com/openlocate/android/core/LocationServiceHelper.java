@@ -82,8 +82,17 @@ final class LocationServiceHelper {
         locations = new LocationDatabase(helper);
         networkManager = GcmNetworkManager.getInstance(context);
         alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
-
         registerForLocalBroadcastEvents();
+        setServiceStatusOnStart();
+        Log.d(TAG, "Inside onCreate of Location service Helper");
+    }
+
+    private void setServiceStatusOnStart() {
+        SharedPreferenceUtils.getInstance(context).setValue(Constants.SERVICE_STATUS, true);
+    }
+
+    private void setServiceStatusOnStop() {
+        SharedPreferenceUtils.getInstance(context).setValue(Constants.SERVICE_STATUS, false);
     }
 
     void onDestroy() {
@@ -91,10 +100,20 @@ final class LocationServiceHelper {
         stopLocationUpdates();
         networkManager = null;
         locations = null;
+        setServiceStatusOnStop();
+        //disableAlarms();
 
         if (context.getClass().isInstance(LocationService.class)) {
             ((LocationService) context).stopForeground(true);
         }
+        Log.d(TAG, "Inside onDestroy of Location service Helper");
+    }
+
+    void disableAlarms() {
+        Intent intent = new Intent(context, LocationService.class);
+        intent.putExtra("is_alarm", true);
+        PendingIntent pendingIntent = PendingIntent.getService(context, 0, intent, 0);
+        alarmManager.cancel(pendingIntent);
     }
 
     void onStartCommand(Intent intent) {
@@ -156,6 +175,10 @@ final class LocationServiceHelper {
 
     @SuppressWarnings("unchecked")
     private void setValues(Intent intent) {
+
+
+        Log.d(TAG, "setValues: " + intent.getStringExtra(Constants.URL_KEY));
+
         url = intent.getStringExtra(Constants.URL_KEY);
         headers = (HashMap<String, String>) intent.getSerializableExtra(Constants.HEADER_KEY);
 
@@ -182,6 +205,7 @@ final class LocationServiceHelper {
     }
 
     private void connectGoogleClient() {
+        Log.e(TAG, "Google Api Client: Connecting ");
         if (googleApiClient == null) {
             googleApiClient = new GoogleApiClient.Builder(context)
                     .addConnectionCallbacks(new ConnectionCallbacks())
@@ -212,16 +236,23 @@ final class LocationServiceHelper {
             locationListener = new LocationListener();
             LocationServices.FusedLocationApi.requestLocationUpdates(googleApiClient, request, locationListener);
             schedulePeriodicTasks();
-
-            Intent intent = new Intent(context, LocationService.class);
-            intent.putExtra("is_alarm", true);
-
-            PendingIntent pendingIntent = PendingIntent.getService(context, 0, intent, 0);
-            alarmManager.setInexactRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP, 60000, 60000, pendingIntent);
         } catch (SecurityException e) {
             locationListener = null;
             Log.e(TAG, e.getMessage());
         }
+    }
+
+    public void onTaskRemoved(Intent rootIntent) {
+        Log.d(TAG, "TASK REMOVED");
+        setAlarmManager();
+        unschedulePeriodicTasks();
+    }
+
+    private void setAlarmManager() {
+        Intent intent = new Intent(context, LocationService.class);
+        intent.putExtra("is_alarm", true);
+        PendingIntent pendingIntent = PendingIntent.getService(context, 0, intent, PendingIntent.FLAG_ONE_SHOT);
+        alarmManager.set(AlarmManager.ELAPSED_REALTIME_WAKEUP, 1000, pendingIntent);
     }
 
     private void stopLocationUpdates() {
@@ -236,6 +267,13 @@ final class LocationServiceHelper {
     }
 
     private void scheduleDispatchLocationService() {
+
+        Log.e(TAG, "Google Api Client Connection Suspended : scheduleDispatchLocationService" + url );
+
+        if(url == null || headers == null) {
+            return;
+        }
+
         Bundle bundle = new Bundle();
         bundle.putString(Constants.URL_KEY, url);
         bundle.putString(Constants.HEADER_KEY, headers.toString());
@@ -265,6 +303,7 @@ final class LocationServiceHelper {
 
         @Override
         public void onConnected(@Nullable Bundle bundle) {
+            Log.d(TAG, "Google Api Client Connection Connected. Starting Location updates");
             startLocationUpdates();
         }
 

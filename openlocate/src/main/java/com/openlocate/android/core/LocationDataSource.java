@@ -31,4 +31,6 @@ interface LocationDataSource {
     List<OpenLocateLocation> popAll();
 
     long size();
+
+    void close();
 }
