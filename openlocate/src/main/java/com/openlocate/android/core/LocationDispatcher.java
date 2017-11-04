@@ -21,6 +21,7 @@
  */
 package com.openlocate.android.core;
 
+import android.content.Context;
 import android.util.Log;
 
 import org.json.JSONArray;
@@ -66,7 +67,6 @@ final class LocationDispatcher {
 
     private JSONObject getLocationsParam(List<OpenLocateLocation> locationsToPost) {
         JSONObject jsonObject = new JSONObject();
-
         JSONArray jsonArray = new JSONArray();
         for (OpenLocateLocation location : locationsToPost) {
             jsonArray.put(location.getJson());

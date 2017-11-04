@@ -24,6 +24,8 @@ package com.openlocate.android.core;
 import android.content.Context;
 import android.location.LocationManager;
 
+import com.openlocate.android.config.Configuration;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -47,9 +49,9 @@ enum LocationProvider {
         this.value = value;
     }
 
-   String getValue() {
+    String getValue() {
        return value;
-   }
+    }
 
     public static LocationProvider get(String value) {
         return lookup.get(value);
