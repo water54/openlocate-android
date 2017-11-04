@@ -45,7 +45,6 @@ import com.google.android.gms.gcm.PeriodicTask;
 import com.google.android.gms.gcm.Task;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
-import com.openlocate.android.config.Configuration;
 
 import java.util.HashMap;
 
@@ -73,7 +72,7 @@ final class LocationServiceHelper {
     private AdvertisingIdClient.Info advertisingInfo = new AdvertisingIdClient.Info("", true);
 
     private Context context;
-    private Configuration configuration;
+    private OpenLocate.Configuration configuration;
 
     LocationServiceHelper(Context context) {
         this.context = context;

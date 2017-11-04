@@ -1,17 +1,5 @@
 package com.openlocate.android.core;
 
-import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
-import android.net.ConnectivityManager;
-import android.net.wifi.WifiInfo;
-import android.net.wifi.WifiManager;
-import android.os.BatteryManager;
-import android.os.Build;
-import android.telephony.TelephonyManager;
-
-import com.openlocate.android.config.Configuration;
-
 final class InformationFields {
 
     private final String manufacturer;

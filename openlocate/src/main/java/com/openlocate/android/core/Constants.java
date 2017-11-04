@@ -53,4 +53,6 @@ final class Constants {
     static final String LOCATION_INTERVAL_CHANGED = Constants.class.getCanonicalName() + ".LocationIntervalChanged";
     static final String LOCATION_ACCURACY_CHANGED = Constants.class.getCanonicalName() + ".LocationAccuracyChanged";
     static final String TRANSMISSION_INTERVAL_CHANGED = Constants.class.getCanonicalName() + ".TransmissionIntervalChanged";
+    public static final String OPENLOCATE = "com.openlocate.android";
+    public static final String IS_SERVICE_STARTED = "is_service_running";
 }

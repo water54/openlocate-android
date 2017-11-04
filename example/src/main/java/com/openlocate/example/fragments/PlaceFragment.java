@@ -91,7 +91,7 @@ public class PlaceFragment extends Fragment {
 
     public void currentPlace() {
         try {
-            OpenLocate openLocate = OpenLocate.getInstance(activity);
+            OpenLocate openLocate = OpenLocate.getInstance();
             showDialog();
             openLocate.getCurrentLocation(new OpenLocateLocationCallback() {
                 @Override
