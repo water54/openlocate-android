@@ -21,7 +21,9 @@
  */
 package com.openlocate.android.core;
 
+import android.app.AlarmManager;
 import android.app.Notification;
+import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -33,6 +35,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
+import android.os.Build;
 
 import com.google.android.gms.ads.identifier.AdvertisingIdClient;
 import com.google.android.gms.common.ConnectionResult;
@@ -42,7 +45,6 @@ import com.google.android.gms.gcm.PeriodicTask;
 import com.google.android.gms.gcm.Task;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
-import com.openlocate.android.config.Configuration;
 
 import java.util.HashMap;
 
@@ -55,10 +57,11 @@ final class LocationServiceHelper {
 
     private GoogleApiClient googleApiClient;
     private GcmNetworkManager networkManager;
+    private AlarmManager alarmManager;
 
-    private long locationRequestIntervalInSecs;
-    private long transmissionIntervalInSecs;
-    private LocationAccuracy accuracy;
+    private long locationRequestIntervalInSecs = Constants.DEFAULT_LOCATION_INTERVAL_SEC;
+    private long transmissionIntervalInSecs = Constants.DEFAULT_TRANSMISSION_INTERVAL_SEC;
+    private LocationAccuracy accuracy = Constants.DEFAULT_LOCATION_ACCURACY;
 
     private LocationDataSource locations;
     private LocationServiceHelper.LocationListener locationListener;
@@ -66,10 +69,10 @@ final class LocationServiceHelper {
     private String url;
     private HashMap<String, String> headers;
 
-    private AdvertisingIdClient.Info advertisingInfo;
+    private AdvertisingIdClient.Info advertisingInfo = new AdvertisingIdClient.Info("", true);
 
     private Context context;
-    private Configuration configuration;
+    private OpenLocate.Configuration configuration;
 
     LocationServiceHelper(Context context) {
         this.context = context;
@@ -79,8 +82,18 @@ final class LocationServiceHelper {
         SQLiteOpenHelper helper = new DatabaseHelper(context);
         locations = new LocationDatabase(helper);
         networkManager = GcmNetworkManager.getInstance(context);
-
+        alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
         registerForLocalBroadcastEvents();
+        setServiceStatusOnStart();
+        Log.d(TAG, "Inside onCreate of Location service Helper");
+    }
+
+    private void setServiceStatusOnStart() {
+        SharedPreferenceUtils.getInstance(context).setValue(Constants.SERVICE_STATUS, true);
+    }
+
+    private void setServiceStatusOnStop() {
+        SharedPreferenceUtils.getInstance(context).setValue(Constants.SERVICE_STATUS, false);
     }
 
     void onDestroy() {
@@ -88,20 +101,38 @@ final class LocationServiceHelper {
         stopLocationUpdates();
         networkManager = null;
         locations = null;
+        setServiceStatusOnStop();
+        //disableAlarms();
 
         if (context.getClass().isInstance(LocationService.class)) {
             ((LocationService) context).stopForeground(true);
         }
+        Log.d(TAG, "Inside onDestroy of Location service Helper");
+    }
+
+    void disableAlarms() {
+        Intent intent = new Intent(context, LocationService.class);
+        intent.putExtra("is_alarm", true);
+        PendingIntent pendingIntent = PendingIntent.getService(context, 0, intent, 0);
+        alarmManager.cancel(pendingIntent);
     }
 
     void onStartCommand(Intent intent) {
+        if (intent.getExtras().getBoolean("is_alarm")) {
+            if (googleApiClient == null || !googleApiClient.isConnected()) {
+                connectGoogleClient();
+            }
+            return;
+        }
         setValues(intent);
-
-        /* Starting the service as foreground service. If the service is not foreground,
-        service will be killed when the app is killed.
-         */
         connectGoogleClient();
-        startForeground();
+
+        /* Starting the service as foreground service for Android Oreo.
+         * If the service is not foreground, service will be killed when the app is killed.
+         */
+        if (Build.VERSION.SDK_INT >= 26) {
+            startForeground();
+        }
     }
 
     private BroadcastReceiver locationIntervalChangedReceiver = new BroadcastReceiver() {
@@ -144,6 +175,10 @@ final class LocationServiceHelper {
 
     @SuppressWarnings("unchecked")
     private void setValues(Intent intent) {
+
+
+        Log.d(TAG, "setValues: " + intent.getStringExtra(Constants.URL_KEY));
+
         url = intent.getStringExtra(Constants.URL_KEY);
         headers = (HashMap<String, String>) intent.getSerializableExtra(Constants.HEADER_KEY);
 
@@ -175,6 +210,7 @@ final class LocationServiceHelper {
     }
 
     private void connectGoogleClient() {
+        Log.e(TAG, "Google Api Client: Connecting ");
         if (googleApiClient == null) {
             googleApiClient = new GoogleApiClient.Builder(context)
                     .addConnectionCallbacks(new ConnectionCallbacks())
@@ -185,10 +221,7 @@ final class LocationServiceHelper {
 
         if (!googleApiClient.isConnected()) {
             googleApiClient.connect();
-            return;
         }
-
-        startLocationUpdates();
     }
 
     private LocationRequest getLocationRequest() {
@@ -213,6 +246,19 @@ final class LocationServiceHelper {
         }
     }
 
+    public void onTaskRemoved(Intent rootIntent) {
+        Log.d(TAG, "TASK REMOVED");
+        setAlarmManager();
+        unschedulePeriodicTasks();
+    }
+
+    private void setAlarmManager() {
+        Intent intent = new Intent(context, LocationService.class);
+        intent.putExtra("is_alarm", true);
+        PendingIntent pendingIntent = PendingIntent.getService(context, 0, intent, PendingIntent.FLAG_ONE_SHOT);
+        alarmManager.set(AlarmManager.ELAPSED_REALTIME_WAKEUP, 1000, pendingIntent);
+    }
+
     private void stopLocationUpdates() {
         if (googleApiClient != null) {
             LocationServices.FusedLocationApi.removeLocationUpdates(googleApiClient, locationListener);
@@ -225,6 +271,13 @@ final class LocationServiceHelper {
     }
 
     private void scheduleDispatchLocationService() {
+
+        Log.e(TAG, "Google Api Client Connection Suspended : scheduleDispatchLocationService" + url );
+
+        if(url == null || headers == null) {
+            return;
+        }
+
         Bundle bundle = new Bundle();
         bundle.putString(Constants.URL_KEY, url);
         bundle.putString(Constants.HEADER_KEY, headers.toString());
@@ -254,6 +307,7 @@ final class LocationServiceHelper {
 
         @Override
         public void onConnected(@Nullable Bundle bundle) {
+            Log.d(TAG, "Google Api Client Connection Connected. Starting Location updates");
             startLocationUpdates();
         }
 

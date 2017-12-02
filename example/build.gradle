@@ -19,7 +19,6 @@ def safegraphToken
 def safegraphProviderId
 
 if (project.file('local.properties').canRead()) {
-
     properties.load(new FileInputStream(project.file('local.properties')))
     safegraphToken = properties.getProperty('safegraph.token')
     safegraphProviderId = properties.getProperty('safegraph.providerId')
@@ -30,7 +29,7 @@ if (project.file('local.properties').canRead()) {
 
 android {
     compileSdkVersion 25
-    buildToolsVersion "25.0.2"
+    buildToolsVersion '26.0.2'
 
     defaultConfig {
         applicationId "com.openlocate.example"

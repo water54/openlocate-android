@@ -52,4 +52,9 @@ final class LocationDatabase implements LocationDataSource {
     public long size() {
         return LocationTable.size(helper.getReadableDatabase());
     }
+
+    @Override
+    public void close() {
+        helper.close();
+    }
 }

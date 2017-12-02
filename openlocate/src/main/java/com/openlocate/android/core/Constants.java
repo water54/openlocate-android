@@ -32,16 +32,13 @@ final class Constants {
     // Location service intent keys
     static final String URL_KEY = "url";
     static final String HEADER_KEY = "header";
+    static final String SERVICE_STATUS = "service_status";
+    static final String TRACKING_STATUS = "tracking_status";
 
     static final String LOCATION_ACCURACY_KEY = "location_accuracy";
     static final String LOCATION_INTERVAL_KEY = "location_interval";
     static final String TRANSMISSION_INTERVAL_KEY = "transmission_interval";
     static final String INTENT_CONFIGURATION = "intent_configuration";
-    static final String PROVIDER_SOURCE_ID_KEY = "provider_source_id";
-    static final String USER_ID_3P = "user_id_3p";
-    static final String EMAIL_ADDR = "email_addr";
-
-    static final String PROVIDER_KEY = "provider_id";
 
     static final String ADVERTISING_ID_KEY = "advertising_id";
     static final String LIMITED_AD_TRACKING_ENABLED_KEY = "limited_ad_tracking_enabled";
@@ -52,4 +49,6 @@ final class Constants {
     static final String LOCATION_INTERVAL_CHANGED = Constants.class.getCanonicalName() + ".LocationIntervalChanged";
     static final String LOCATION_ACCURACY_CHANGED = Constants.class.getCanonicalName() + ".LocationAccuracyChanged";
     static final String TRANSMISSION_INTERVAL_CHANGED = Constants.class.getCanonicalName() + ".TransmissionIntervalChanged";
+    public static final String OPENLOCATE = "com.openlocate.android";
+    public static final String IS_SERVICE_STARTED = "is_service_running";
 }

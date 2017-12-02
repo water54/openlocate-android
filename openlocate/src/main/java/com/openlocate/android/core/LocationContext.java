@@ -2,8 +2,6 @@ package com.openlocate.android.core;
 
 import android.app.ActivityManager;
 
-import com.openlocate.android.config.Configuration;
-
 import java.util.HashMap;
 import java.util.Map;
 

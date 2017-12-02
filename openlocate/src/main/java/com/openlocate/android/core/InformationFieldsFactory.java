@@ -10,12 +10,10 @@ import android.os.BatteryManager;
 import android.os.Build;
 import android.telephony.TelephonyManager;
 
-import com.openlocate.android.config.Configuration;
-
 final class InformationFieldsFactory {
 
     private Context context;
-    private Configuration configuration;
+    private OpenLocate.Configuration configuration;
 
     private String manufacturer;
     private String model;
@@ -31,7 +29,7 @@ final class InformationFieldsFactory {
 
     private static final String BASE_NAME = "Android";
 
-    private InformationFieldsFactory(Context context, Configuration configuration) {
+    private InformationFieldsFactory(Context context, OpenLocate.Configuration configuration) {
 
         this.configuration = configuration;
         this.context = context;
@@ -59,7 +57,7 @@ final class InformationFieldsFactory {
 
     }
 
-    public static InformationFields collectInformationFields(Context context, Configuration configuration) {
+    public static InformationFields collectInformationFields(Context context, OpenLocate.Configuration configuration) {
 
         InformationFieldsFactory informationFieldsFactory =  new InformationFieldsFactory(context, configuration);
 

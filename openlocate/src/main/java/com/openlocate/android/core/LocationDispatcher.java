@@ -52,11 +52,13 @@ final class LocationDispatcher {
                     @Override
                     public void onCompletion(HttpRequest request, HttpResponse response) {
                         Log.i(TAG, "Successfully posted locations");
+                        dataSource.close();
                     }
                 }, new HttpClientCallback() {
                     @Override
                     public void onCompletion(HttpRequest request, HttpResponse response) {
                         dataSource.addAll(locations);
+                        dataSource.close();
                         Log.e(TAG, "Fail to post location");
                     }
                 }
