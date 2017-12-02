@@ -19,7 +19,6 @@ def safegraphToken
 def safegraphProviderId
 
 if (project.file('local.properties').canRead()) {
-
     properties.load(new FileInputStream(project.file('local.properties')))
     safegraphToken = properties.getProperty('safegraph.token')
     safegraphProviderId = properties.getProperty('safegraph.providerId')

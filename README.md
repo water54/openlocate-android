@@ -56,50 +56,38 @@ repositories {
 Add the below line to your app's `build.gradle` inside the `dependencies` section:
     
 ```groovy
-compile 'com.openlocate:openlocate:0.1.11'
+compile 'com.openlocate:openlocate:1.0.'
 ```
 
 ## Usage
 
-### Start tracking of location
-Configure where the SDK should send data to by building the configuration with appropriate URL and headers. Supply the configuration to the `startTracking` method.
+### Initialization
+Configure where the SDK should send data to by building the configuration with appropriate URL and headers. Supply the configuration to the `initialize` method.
 
 ```java
-Configuration config = new Configuration.Builder()
-                    .setUrl(<Your URL>)
+OpenLocate.Configuration config = new OpenLocate.Configuration.Builder(this, BuildConfig.URL)
                     .setHeaders(<Your Headers>)
                     .build();
-try {
-  OpenLocate.getInstance(context).startTracking(config);
-} catch (Exception e) {
-  Log.e("OpenLocate", e.getMessage())
-}
+
+OpenLocate.initialize(config);
+
 ```
 
-#### For example, to send data to SafeGraph:
+### Start tracking:
+Activity should be passed to method below. Library will request permission for you.
 
 ```java
-HashMap<String, String> headers = new HashMap<>();
-headers.put("Authorization", "Bearer <TOKEN>");
-
-Configuration config = new Configuration.Builder()
-        .setUrl("https://api.safegraph.com/v1/provider/<UUID>/devicelocation")
-        .setHeaders(headers)
-        .build();
-try {
-  OpenLocate.getInstance(context).startTracking(config);
-} catch (Exception e) {
-  Log.e("OpenLocate", e.getMessage())
-}
+ 
+OpenLocate.getInstance().startTracking(activity);
 ```
-
+`startTracking` method can be called only once: library will restart tracking on next initialization.
 
 ### Stop tracking of location
 
 To stop location tracking, call the `stopTracking` method on `OpenLocate`. Get the instance by calling `getInstance`.
 
 ```java
-OpenLocate.getInstance(context).stopTracking()
+OpenLocate.getInstance().stopTracking()
 ```
 
 ### Fields collected by the SDK
@@ -132,12 +120,11 @@ The following fields are collected by the SDK to be sent to a private or public 
 
 ### Configuring fields for collection
 
-Optional field collection can be disabled while building the configuration object before passing it to the `startTracking` method.
+Optional field collection can be disabled while building the configuration object before passing it to the `initialize` method.
 
 #### For example
 ```java
-Configuration configuration = new Configuration.Builder()
-                    .setUrl(BuildConfig.URL)
+OpenLocate.Configuration configuration = new OpenLocate.Configuration.Builder(context, BuildConfig.URL)
                     .setHeaders(getHeader())
                     .withoutDeviceManufacturer()
                     .withoutDeviceModel()
@@ -158,7 +145,7 @@ To use user's current location, obtain the location by calling `getCurrentLocati
 #### For example, to obtain user location:
 
 ```java
-OpenLocate openLocate = OpenLocate.getInstance(activity);
+OpenLocate openLocate = OpenLocate.getInstance();
 
 openLocate.getCurrentLocation(new OpenLocateLocationCallback() {
     @Override
@@ -310,6 +297,8 @@ This is a sample request body sent by the SDK.
   }
 ]
 ```
+
+If you want to have the SDK send data to your own AWS s3 environment for example, look into setting up an [Kinesis firehose](https://aws.amazon.com/kinesis/firehose/) according to the SDK request above.
 
 ## Communication
 

@@ -33,7 +33,7 @@ public class LocationProviderTests {
         LocationProvider gps = LocationProvider.GPS;
 
         // Then
-        assertEquals("gps", gps.toString());
+        assertEquals("gps", gps.getValue());
     }
 
     @Test
@@ -42,7 +42,7 @@ public class LocationProviderTests {
         LocationProvider network = LocationProvider.NETWORK;
 
         // Then
-        assertEquals("network", network.toString());
+        assertEquals("network", network.getValue());
     }
 
     @Test
@@ -51,7 +51,7 @@ public class LocationProviderTests {
         LocationProvider passive = LocationProvider.PASSIVE;
 
         // Then
-        assertEquals("passive", passive.toString());
+        assertEquals("passive", passive.getValue());
     }
 
     @Test

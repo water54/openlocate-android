@@ -21,6 +21,8 @@
  */
 package com.openlocate.android.core;
 
+import android.Manifest;
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -28,6 +30,7 @@ import android.location.Location;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.support.annotation.NonNull;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.text.TextUtils;
 import android.util.Log;
@@ -40,14 +43,17 @@ import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.openlocate.android.callbacks.OpenLocateLocationCallback;
-import com.openlocate.android.exceptions.GooglePlayServicesNotAvailable;
 import com.openlocate.android.exceptions.InvalidConfigurationException;
 import com.openlocate.android.exceptions.LocationDisabledException;
 import com.openlocate.android.exceptions.LocationPermissionException;
 
 import java.util.HashMap;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class OpenLocate implements OpenLocateLocationTracker {
+
+    private static final int LOCATION_PERMISSION_REQUEST = 1001;
 
     private static final int PLAY_SERVICES_RESOLUTION_REQUEST = 9000;
 
@@ -58,7 +64,6 @@ public class OpenLocate implements OpenLocateLocationTracker {
     private String serverUrl;
     private Configuration configuration;
     private HashMap<String, String> headers;
-
 
     private FusedLocationProviderClient fusedLocationProviderClient;
 
@@ -226,10 +231,6 @@ public class OpenLocate implements OpenLocateLocationTracker {
             return headers;
         }
 
-        public boolean isValid() {
-            return getUrl() != null && !getUrl().isEmpty();
-        }
-
         public boolean isWifiCollectionDisabled() {
             return isWifiCollectionDisabled;
         }
@@ -283,9 +284,19 @@ public class OpenLocate implements OpenLocateLocationTracker {
     }
 
     public static OpenLocate initialize(Configuration configuration) {
+
+        saveConfiguration(configuration);
+
         if (sharedInstance == null) {
             sharedInstance = new OpenLocate(configuration);
         }
+
+        boolean trackingEnabled = SharedPreferenceUtils.getInstance(configuration.context).getBoolanValue(Constants.TRACKING_STATUS, false);
+
+        if (trackingEnabled && LocationService.hasLocationPermission(configuration.context)) {
+            sharedInstance.onPermissionsGranted();
+        }
+
         return sharedInstance;
     }
 
@@ -297,9 +308,50 @@ public class OpenLocate implements OpenLocateLocationTracker {
     }
 
     @Override
-    public void startTracking()
-            throws InvalidConfigurationException, LocationDisabledException, LocationPermissionException, GooglePlayServicesNotAvailable {
-        validateTrackingCapabilities();
+    public void startTracking(Activity activity)  {
+
+        int resultCode = isGooglePlayServicesAvailable();
+        if (resultCode != ConnectionResult.SUCCESS) {
+            GoogleApiAvailability.getInstance().getErrorDialog(activity, resultCode, PLAY_SERVICES_RESOLUTION_REQUEST).show();
+            return;
+        }
+
+        SharedPreferenceUtils.getInstance(context).setValue(Constants.TRACKING_STATUS, true);
+
+        if (LocationService.hasLocationPermission(context)) {
+            onPermissionsGranted();
+        } else {
+            ActivityCompat.requestPermissions(
+                    activity,
+                    new String[]{Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION},
+                    LOCATION_PERMISSION_REQUEST);
+            startCheckingPermissionTask();
+        }
+    }
+
+    private int isGooglePlayServicesAvailable() {
+        GoogleApiAvailability apiAvailability = GoogleApiAvailability.getInstance();
+        return apiAvailability.isGooglePlayServicesAvailable(context);
+    }
+
+    void startCheckingPermissionTask() {
+
+        Timer timer = new Timer();
+        timer.scheduleAtFixedRate(new TimerTask() {
+            @Override
+            public void run() {
+
+                if (LocationService.hasLocationPermission(context)) {
+                    onPermissionsGranted();
+                    this.cancel();
+                }
+
+            }
+        }, 5 * 1000, 5 * 1000);
+
+    }
+
+    void onPermissionsGranted() {
 
         FetchAdvertisingInfoTask task = new FetchAdvertisingInfoTask(context, new FetchAdvertisingInfoTaskCallback() {
             @Override
@@ -310,9 +362,9 @@ public class OpenLocate implements OpenLocateLocationTracker {
         task.execute();
     }
 
+
     @Override
     public void getCurrentLocation(final OpenLocateLocationCallback callback) throws LocationDisabledException, LocationPermissionException {
-        validateLocationPermission();
         validateLocationEnabled();
 
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(context);
@@ -396,17 +448,7 @@ public class OpenLocate implements OpenLocateLocationTracker {
         intent.putExtra(Constants.TRANSMISSION_INTERVAL_KEY, transmissionInterval);
     }
 
-    private void validateTrackingCapabilities()
-            throws InvalidConfigurationException, LocationPermissionException, LocationDisabledException, GooglePlayServicesNotAvailable {
-
-        validateGooglePlayServices();
-        warnIfLocationServicesAreAlreadyRunning();
-        validateConfiguration();
-        validateLocationPermission();
-        validateLocationEnabled();
-    }
-
-    private void validateConfiguration() throws InvalidConfigurationException {
+    private static void saveConfiguration(Configuration configuration) throws InvalidConfigurationException {
         if (TextUtils.isEmpty(configuration.serverUrl)) {
             String message = "Invalid configuration. Please configure a valid url or header.";
 
@@ -417,28 +459,10 @@ public class OpenLocate implements OpenLocateLocationTracker {
         }
 
         if(!TextUtils.isEmpty(configuration.getUrl())) {
-            SharedPreferenceUtils.getInstance(context).setValue(Constants.URL_KEY, configuration.getUrl());
-            SharedPreferenceUtils.getInstance(context).saveMap(Constants.HEADER_KEY, configuration.getHeaders());
+            SharedPreferenceUtils.getInstance(configuration.context).setValue(Constants.URL_KEY, configuration.getUrl());
+            SharedPreferenceUtils.getInstance(configuration.context).saveMap(Constants.HEADER_KEY, configuration.getHeaders());
         }
 
-    }
-
-    private void warnIfLocationServicesAreAlreadyRunning() {
-        if (ServiceUtils.isServiceRunning(LocationService.class, context)) {
-            String message = "Location tracking is already active. Please stop the previous tracking before starting,";
-            Log.w(TAG, message);
-        }
-    }
-
-    private void validateLocationPermission() throws LocationPermissionException {
-        if (!LocationService.hasLocationPermission(context)) {
-            String message = "Location permission is denied. Please enable location permission.";
-
-            Log.e(TAG, message);
-            throw new LocationPermissionException(
-                    message
-            );
-        }
     }
 
     private void validateLocationEnabled() throws LocationDisabledException {
@@ -452,20 +476,6 @@ public class OpenLocate implements OpenLocateLocationTracker {
         }
     }
 
-    private void validateGooglePlayServices() throws GooglePlayServicesNotAvailable {
-        GoogleApiAvailability apiAvailability = GoogleApiAvailability.getInstance();
-        int resultCode = apiAvailability.isGooglePlayServicesAvailable(context);
-        if (resultCode != ConnectionResult.SUCCESS) {
-            String message = "Google Play Services is not available on this device.";
-            boolean isUserResolvableError = false;
-            if (apiAvailability.isUserResolvableError(resultCode)) {
-                message = "Google Play Services is not enabled/installed on this device.";
-                isUserResolvableError = true;
-            }
-            throw new GooglePlayServicesNotAvailable(message, isUserResolvableError);
-        }
-    }
-
     @Override
     public void stopTracking() {
         Intent intent = new Intent(context, LocationService.class);
@@ -474,7 +484,7 @@ public class OpenLocate implements OpenLocateLocationTracker {
 
     @Override
     public boolean isTracking() {
-        return ServiceUtils.isServiceRunning(LocationService.class, context);
+        return SharedPreferenceUtils.getInstance(context).getBoolanValue(Constants.TRACKING_STATUS, false);
     }
 
     public long getLocationInterval() {
