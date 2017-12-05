@@ -478,6 +478,7 @@ public class OpenLocate implements OpenLocateLocationTracker {
 
     @Override
     public void stopTracking() {
+        SharedPreferenceUtils.getInstance(context).setValue(Constants.TRACKING_STATUS, false);
         Intent intent = new Intent(context, LocationService.class);
         context.stopService(intent);
     }

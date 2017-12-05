@@ -56,21 +56,31 @@ repositories {
 Add the below line to your app's `build.gradle` inside the `dependencies` section:
     
 ```groovy
-compile 'com.openlocate:openlocate:1.0.'
+compile 'com.openlocate:openlocate:1.+'
 ```
 
 ## Usage
 
 ### Initialization
-Configure where the SDK should send data to by building the configuration with appropriate URL and headers. Supply the configuration to the `initialize` method.
+Configure where the SDK should send data to by building the configuration with appropriate URL and headers. Supply the configuration to the `initialize` method.  Initialize OpenLocate in the `Application`
 
 ```java
-OpenLocate.Configuration config = new OpenLocate.Configuration.Builder(this, BuildConfig.URL)
-                    .setHeaders(<Your Headers>)
-                    .build();
 
-OpenLocate.initialize(config);
+import android.app.Application;
+import com.openlocate.android.core.OpenLocate;
 
+public class MyApplication extends Application {
+
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        OpenLocate.Configuration config = new OpenLocate.Configuration.Builder(this, BuildConfig.URL)
+            .setHeaders(<Your Headers>)
+            .build();
+        
+        OpenLocate.initialize(config);
+    }
+}
 ```
 
 ### Start tracking:

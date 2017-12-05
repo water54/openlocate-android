@@ -19,7 +19,7 @@ public class SharedPreferenceUtils {
 
     private SharedPreferenceUtils(Context context) {
         mContext = context;
-        mSharedPreferences = context.getSharedPreferences("OpenLocate", Context.MODE_PRIVATE);
+        mSharedPreferences = context.getSharedPreferences(Constants.OPENLOCATE, Context.MODE_PRIVATE);
         mSharedPreferencesEditor = mSharedPreferences.edit();
     }
 

@@ -55,29 +55,6 @@ public class OpenLocateLocationTests {
     }
 
     @Test
-    public void testOpenLocateJsonConstructor() {
-        // Given
-        JSONObject jsonObject = getJson();
-
-        // When
-        OpenLocateLocation location = new OpenLocateLocation(jsonObject.toString());
-        JSONObject json = location.getJson();
-
-        // Then
-        assertNotNull(location);
-        try {
-            assertEquals(json.getDouble(OpenLocateLocation.Keys.LATITUDE), lat, 0.0d);
-            assertEquals(json.getDouble(OpenLocateLocation.Keys.LONGITUDE), lng, 0.0d);
-            assertEquals(json.getDouble(OpenLocateLocation.Keys.HORIZONTAL_ACCURACY), accuracy, 0.0);
-            assertEquals(json.getLong(OpenLocateLocation.Keys.TIMESTAMP), timestamp);
-            assertEquals(json.getBoolean(OpenLocateLocation.Keys.AD_OPT_OUT), adOptOut);
-            assertEquals(json.getString(OpenLocateLocation.Keys.AD_ID), adId);
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-    }
-
-    @Test
     public void testKeys() {
         assertEquals("ad_id", OpenLocateLocation.Keys.AD_ID);
         assertEquals("ad_opt_out", OpenLocateLocation.Keys.AD_OPT_OUT);

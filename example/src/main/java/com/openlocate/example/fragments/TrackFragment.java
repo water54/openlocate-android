@@ -76,11 +76,8 @@ public class TrackFragment extends Fragment {
             }
         });
 
+        onTrackingStatusChange();
 
-        OpenLocate openLocate = OpenLocate.getInstance();
-        if (openLocate != null && openLocate.isTracking()) {
-            onTrackingStatusChange();
-        }
         return view;
     }
 
@@ -93,17 +90,11 @@ public class TrackFragment extends Fragment {
 
     private void startTracking() {
         OpenLocate.getInstance().startTracking(getActivity());
-
-        Toast.makeText(activity, getString(R.string.sercive_started), Toast.LENGTH_LONG).show();
-
         onTrackingStatusChange();
     }
 
     private void stopTracking() {
         OpenLocate.getInstance().stopTracking();
-
-        Toast.makeText(activity, getString(R.string.sercive_stopped), Toast.LENGTH_LONG).show();
-
         onTrackingStatusChange();
     }
 

@@ -1,8 +1,6 @@
 package com.openlocate.example;
 
 import android.app.Application;
-import android.os.Build;
-
 import com.openlocate.android.core.OpenLocate;
 
 import java.util.HashMap;
