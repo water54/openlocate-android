@@ -73,7 +73,6 @@ compile 'com.openlocate:openlocate:1.+'
 Configure where the SDK should send data to by building the configuration with appropriate URL and headers. Supply the configuration to the `initialize` method.  Initialize OpenLocate in the `Application`
 
 ```java
-
 import android.app.Application;
 import com.openlocate.android.core.OpenLocate;
 
@@ -84,6 +83,32 @@ public class MyApplication extends Application {
         super.onCreate();
         OpenLocate.Configuration config = new OpenLocate.Configuration.Builder(this, BuildConfig.URL)
             .setHeaders(<Your Headers>)
+            .build();
+        
+        OpenLocate.initialize(config);
+    }
+}
+```
+
+#### For example, to send data to SafeGraph:
+
+```java
+import android.app.Application;
+import com.openlocate.android.core.OpenLocate;
+
+public class MyApplication extends Application {
+
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        
+        String url = "https://api.safegraph.com/v1/provider/<UUID>/devicelocation"
+        
+        HashMap<String, String> headers = new HashMap<>();
+        headers.put("Authorization", "Bearer <TOKEN>");
+
+        OpenLocate.Configuration config = new OpenLocate.Configuration.Builder(this, url)
+            .setHeaders(headers)
             .build();
         
         OpenLocate.initialize(config);

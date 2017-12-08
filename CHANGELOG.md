@@ -2,7 +2,15 @@
 
 `OpenLocate-Android` adheres to [Semantic Versioning](http://semver.org/).
 
-## [1.0.0](https://github.com/OpenLocate/openlocate-android/tag/1.0.0)
+## [1.0.1](https://github.com/OpenLocate/openlocate-android/tree/1.0.1)
+
+#### Fixed
+
+- `android:allowBackup` was set to false in the AndroidManifest.xml. Removed it so it doens't cause a manifest merge conflict.
+
+---
+
+## [1.0.0](https://github.com/OpenLocate/openlocate-android/tree/1.0.0)
 
 #### Added
 
