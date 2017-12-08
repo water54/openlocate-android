@@ -218,7 +218,7 @@ public void fetchGooglePlaces(OpenLocateLocation openLocateLocation, final SafeG
 
 #### For example, to query Safegraph Places API using location:
 
-SafeGraph Places API: https://developers.safegraph.com/docs/places.html
+SafeGraph Places API: https://partners.safegraph.com/places
 
 ```java
 
