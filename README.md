@@ -69,6 +69,15 @@ compile 'com.openlocate:openlocate:1.+'
 
 ## Usage
 
+### Optional configuration
+
+You can change the following parameters:
+- `OpenLocate.getInstance().setTransmissionInterval(long milliseconds)` specifies the interval at which location records are transmitted from the device. The default is 1 hour. Setting a smaller interval will result in more frequent transmission but higher battery usage.
+- `OpenLocate.getInstance().setLocationInterval(long milliseconds)` specifies the maximum interval before which a location update is requested from the device. The default is 3 minutes.
+- `OpenLocate.getInstance().setAccuracy(LocationAccuracy)` specifies the accuracy of location updates as described in the [Fused Location Provider API](https://developers.google.com/android/reference/com/google/android/gms/location/LocationRequest). For example:
+  * PRIORITY_HIGH_ACCURACY: this will return the finest location available e.g. more likely to use GPS
+  * PRIORITY_BALANCED_POWER_ACCURACY: returns approximately block-level accuracy (~100m)
+
 ### Initialization
 Configure where the SDK should send data to by building the configuration with appropriate URL and headers. Supply the configuration to the `initialize` method.  Initialize OpenLocate in the `Application`
 
