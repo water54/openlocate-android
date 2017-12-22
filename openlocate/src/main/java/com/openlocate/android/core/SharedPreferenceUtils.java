@@ -8,7 +8,6 @@ import org.json.JSONObject;
 
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Map;
 
 public class SharedPreferenceUtils {
 

@@ -52,7 +52,7 @@ public class SafeGraphPlaceStore {
    public void fetchNearbyPlaces(OpenLocateLocation openLocateLocation, final SafeGraphPlaceCallback callback) {
 
        SafeGraphPlaceClient safeGraphPlaceClient = ClientGenerator.createClient(SafeGraphPlaceClient.class);
-       Call<SafeGraphPlaceBody> call=safeGraphPlaceClient.getAllPlaces(getQueryMap(openLocateLocation));
+       Call<SafeGraphPlaceBody> call = safeGraphPlaceClient.getAllPlaces(getQueryMap(openLocateLocation));
 
        call.enqueue(new Callback<SafeGraphPlaceBody>() {
            @Override

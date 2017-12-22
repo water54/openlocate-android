@@ -31,6 +31,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
@@ -43,7 +44,7 @@ public class LocationDataSourceTests {
     public void setUp() {
         DatabaseHelper helper = new DatabaseHelper(InstrumentationRegistry.getTargetContext());
         dataSource = new LocationDatabase(helper);
-        dataSource.popAll();
+        dataSource.deleteBefore(System.currentTimeMillis());
     }
 
     private JSONObject getJson() {
@@ -68,7 +69,7 @@ public class LocationDataSourceTests {
     }
 
     private OpenLocateLocation getOpenLocateLocation() {
-        return new OpenLocateLocation(getJson().toString());
+        return new OpenLocateLocation(new Date(), getJson().toString());
     }
 
     @Test
@@ -90,7 +91,8 @@ public class LocationDataSourceTests {
         dataSource.add(location);
 
         // When
-        List<OpenLocateLocation> locations = dataSource.popAll();
+        List<OpenLocateLocation> locations = dataSource.getSince(0);
+        dataSource.deleteBefore(System.currentTimeMillis());
 
         // Then
         assertEquals(1, locations.size());

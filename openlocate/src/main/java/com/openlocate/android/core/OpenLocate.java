@@ -32,7 +32,6 @@ import android.os.Parcelable;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.LocalBroadcastManager;
-import android.text.TextUtils;
 import android.util.Log;
 
 import com.google.android.gms.ads.identifier.AdvertisingIdClient;
@@ -47,7 +46,14 @@ import com.openlocate.android.exceptions.InvalidConfigurationException;
 import com.openlocate.android.exceptions.LocationDisabledException;
 import com.openlocate.android.exceptions.LocationPermissionException;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -61,9 +67,8 @@ public class OpenLocate implements OpenLocateLocationTracker {
     private static final String TAG = OpenLocate.class.getSimpleName();
 
     private Context context;
-    private String serverUrl;
+    private ArrayList<Endpoint> endpoints;
     private Configuration configuration;
-    private HashMap<String, String> headers;
 
     private FusedLocationProviderClient fusedLocationProviderClient;
 
@@ -74,8 +79,10 @@ public class OpenLocate implements OpenLocateLocationTracker {
     public static final class Configuration implements Parcelable {
 
         Context context = null;
-        final String serverUrl;
-        final HashMap<String, String> headers;
+        private ArrayList<Endpoint> endpoints;
+
+        private String serverUrl;
+        private HashMap<String, String> headers;
 
         private boolean isWifiCollectionDisabled;
         private boolean isDeviceModelCollectionDisabled;
@@ -89,9 +96,9 @@ public class OpenLocate implements OpenLocateLocationTracker {
 
         public static final class Builder {
             private Context context;
+            private ArrayList<Endpoint> endpoints;
             private String serverUrl;
             private HashMap<String, String> headers;
-
             private boolean isWifiCollectionDisabled;
             private boolean isDeviceModelCollectionDisabled;
             private boolean isDeviceManufacturerCollectionDisabled;
@@ -102,6 +109,11 @@ public class OpenLocate implements OpenLocateLocationTracker {
             private boolean isLocationMethodCollectionDisabled;
             private boolean isLocationContextCollectionDisabled;
 
+            public Builder(Context context, ArrayList<Endpoint> endpoints) {
+                this.context = context.getApplicationContext();
+                this.endpoints = endpoints;
+            }
+
             public Builder(Context context, String serverUrl) {
                 this.context = context.getApplicationContext();
                 this.serverUrl = serverUrl;
@@ -111,6 +123,7 @@ public class OpenLocate implements OpenLocateLocationTracker {
                 this.headers = headers;
                 return this;
             }
+
 
             public Builder withoutWifiInfo() {
                 this.isWifiCollectionDisabled = true;
@@ -158,14 +171,23 @@ public class OpenLocate implements OpenLocateLocationTracker {
             }
 
             public Configuration build() {
+                if (serverUrl != null) {
+                    Endpoint endpoint = new Endpoint(serverUrl, headers);
+
+                    if (endpoints == null) {
+                        endpoints = new ArrayList<>();
+                    }
+
+                    endpoints.add(endpoint);
+                }
+
                 return new Configuration(this);
             }
         }
 
         private Configuration(Builder builder) {
             this.context = builder.context;
-            this.serverUrl = builder.serverUrl;
-            this.headers = builder.headers;
+            this.endpoints = builder.endpoints;
             this.isCarrierNameCollectionDisabled = builder.isCarrierNameCollectionDisabled;
             this.isChargingInfoCollectionDisabled = builder.isChargingInfoCollectionDisabled;
             this.isConnectionTypeCollectionDisabled = builder.isConnectionTypeCollectionDisabled;
@@ -177,58 +199,8 @@ public class OpenLocate implements OpenLocateLocationTracker {
             this.isWifiCollectionDisabled = builder.isWifiCollectionDisabled;
         }
 
-        @Override
-        public int describeContents() {
-            return 0;
-        }
-
-        @Override
-        public void writeToParcel(Parcel dest, int flags) {
-            dest.writeString(this.serverUrl);
-            dest.writeSerializable(this.headers);
-            dest.writeByte(this.isWifiCollectionDisabled ? (byte) 1 : (byte) 0);
-            dest.writeByte(this.isDeviceModelCollectionDisabled ? (byte) 1 : (byte) 0);
-            dest.writeByte(this.isDeviceManufacturerCollectionDisabled ? (byte) 1 : (byte) 0);
-            dest.writeByte(this.isOperatingSystemCollectionDisbaled ? (byte) 1 : (byte) 0);
-            dest.writeByte(this.isChargingInfoCollectionDisabled ? (byte) 1 : (byte) 0);
-            dest.writeByte(this.isCarrierNameCollectionDisabled ? (byte) 1 : (byte) 0);
-            dest.writeByte(this.isConnectionTypeCollectionDisabled ? (byte) 1 : (byte) 0);
-            dest.writeByte(this.isLocationMethodCollectionDisabled ? (byte) 1 : (byte) 0);
-            dest.writeByte(this.isLocationContextCollectionDisabled ? (byte) 1 : (byte) 0);
-        }
-
-        protected Configuration(Parcel in) {
-            this.serverUrl = in.readString();
-            this.headers = (HashMap<String, String>) in.readSerializable();
-            this.isWifiCollectionDisabled = in.readByte() != 0;
-            this.isDeviceModelCollectionDisabled = in.readByte() != 0;
-            this.isDeviceManufacturerCollectionDisabled = in.readByte() != 0;
-            this.isOperatingSystemCollectionDisbaled = in.readByte() != 0;
-            this.isChargingInfoCollectionDisabled = in.readByte() != 0;
-            this.isCarrierNameCollectionDisabled = in.readByte() != 0;
-            this.isConnectionTypeCollectionDisabled = in.readByte() != 0;
-            this.isLocationMethodCollectionDisabled = in.readByte() != 0;
-            this.isLocationContextCollectionDisabled = in.readByte() != 0;
-        }
-
-        public static final Parcelable.Creator<Configuration> CREATOR = new Parcelable.Creator<Configuration>() {
-            @Override
-            public Configuration createFromParcel(Parcel source) {
-                return new Configuration(source);
-            }
-
-            @Override
-            public Configuration[] newArray(int size) {
-                return new Configuration[size];
-            }
-        };
-
-        public String getUrl() {
-            return serverUrl;
-        }
-
-        public HashMap<String, String> getHeaders() {
-            return headers;
+        public List<Endpoint> getEndpoints() {
+            return endpoints;
         }
 
         public boolean isWifiCollectionDisabled() {
@@ -266,12 +238,213 @@ public class OpenLocate implements OpenLocateLocationTracker {
         public boolean isLocationContextCollectionDisabled() {
             return isLocationContextCollectionDisabled;
         }
+
+        @Override
+        public int describeContents() {
+            return 0;
+        }
+
+        @Override
+        public void writeToParcel(Parcel dest, int flags) {
+            dest.writeTypedList(this.endpoints);
+            dest.writeByte(this.isWifiCollectionDisabled ? (byte) 1 : (byte) 0);
+            dest.writeByte(this.isDeviceModelCollectionDisabled ? (byte) 1 : (byte) 0);
+            dest.writeByte(this.isDeviceManufacturerCollectionDisabled ? (byte) 1 : (byte) 0);
+            dest.writeByte(this.isOperatingSystemCollectionDisbaled ? (byte) 1 : (byte) 0);
+            dest.writeByte(this.isChargingInfoCollectionDisabled ? (byte) 1 : (byte) 0);
+            dest.writeByte(this.isCarrierNameCollectionDisabled ? (byte) 1 : (byte) 0);
+            dest.writeByte(this.isConnectionTypeCollectionDisabled ? (byte) 1 : (byte) 0);
+            dest.writeByte(this.isLocationMethodCollectionDisabled ? (byte) 1 : (byte) 0);
+            dest.writeByte(this.isLocationContextCollectionDisabled ? (byte) 1 : (byte) 0);
+        }
+
+        protected Configuration(Parcel in) {
+            this.endpoints = in.createTypedArrayList(Endpoint.CREATOR);
+            this.isWifiCollectionDisabled = in.readByte() != 0;
+            this.isDeviceModelCollectionDisabled = in.readByte() != 0;
+            this.isDeviceManufacturerCollectionDisabled = in.readByte() != 0;
+            this.isOperatingSystemCollectionDisbaled = in.readByte() != 0;
+            this.isChargingInfoCollectionDisabled = in.readByte() != 0;
+            this.isCarrierNameCollectionDisabled = in.readByte() != 0;
+            this.isConnectionTypeCollectionDisabled = in.readByte() != 0;
+            this.isLocationMethodCollectionDisabled = in.readByte() != 0;
+            this.isLocationContextCollectionDisabled = in.readByte() != 0;
+        }
+
+        public static final Creator<Configuration> CREATOR = new Creator<Configuration>() {
+            @Override
+            public Configuration createFromParcel(Parcel source) {
+                return new Configuration(source);
+            }
+
+            @Override
+            public Configuration[] newArray(int size) {
+                return new Configuration[size];
+            }
+        };
+    }
+
+
+    public static class Endpoint implements Parcelable {
+
+        public static final String URL = "url";
+        public static final String HEADERS = "headers";
+        public static final String HEADERS_KEY = "key";
+        public static final String HEADERS_VALUE = "value";
+
+        public static List<Endpoint> fromJson(String json) throws JSONException {
+
+            JSONArray jsonArray = new JSONArray(json);
+            List<Endpoint> result = new ArrayList<>(jsonArray.length());
+
+            for (int i = 0; i < jsonArray.length(); i++) {
+                JSONObject jsonEndpoint = jsonArray.getJSONObject(i);
+                Builder builder = Endpoint.builder(jsonEndpoint.getString(URL));
+                JSONArray headers = jsonEndpoint.getJSONArray(HEADERS);
+                for (int j = 0; j < headers.length(); j++) {
+                    JSONObject header = headers.getJSONObject(j);
+                    builder.withHeader(header.getString(HEADERS_KEY), header.getString(HEADERS_VALUE));
+                }
+                result.add(builder.build());
+            }
+
+            return result;
+        }
+
+        public static String toJson(List<Endpoint> endpoints) throws JSONException {
+            JSONArray jsonArray = new JSONArray();
+
+            for (Endpoint endpoint : endpoints) {
+
+                JSONObject jsonEndpoint = new JSONObject();
+                jsonEndpoint.put(URL, endpoint.url);
+
+
+                JSONArray jsonHeaders = new JSONArray();
+
+                for (Map.Entry<String, String> entry : endpoint.getHeaders().entrySet()) {
+                    JSONObject header = new JSONObject();
+                    header.put(HEADERS_KEY, entry.getKey());
+                    header.put(HEADERS_VALUE, entry.getValue());
+                    jsonHeaders.put(header);
+                }
+
+                jsonEndpoint.put(HEADERS, jsonHeaders);
+                jsonArray.put(jsonEndpoint);
+            }
+
+            return jsonArray.toString();
+        }
+
+        private String url;
+
+        private HashMap<String, String> headers;
+
+        public Endpoint(String url, HashMap<String, String> headers) {
+            this.url = url;
+            this.headers = headers;
+        }
+
+        private Endpoint(Builder builder) {
+            this.url = builder.url;
+            this.headers = builder.headers;
+        }
+
+        public String getUrl() {
+            return url;
+        }
+
+        public HashMap<String, String> getHeaders() {
+            return headers;
+        }
+
+        public static Builder builder(String url) {
+            return new Builder(url);
+        }
+
+        public static class Builder {
+
+            private String url;
+
+            private HashMap<String, String> headers;
+
+            public Builder(String url) {
+                this.url = url;
+            }
+
+            public Builder withHeader(String key, String value) {
+
+                if (headers == null) {
+                    headers = new HashMap<>();
+                }
+
+                headers.put(key, value);
+                return this;
+            }
+
+              public Builder withHeaders(Map<String, String> headers) {
+
+                if (this.headers == null) {
+                    this.headers = new HashMap<>();
+                }
+
+                this.headers.putAll(headers);
+                return this;
+            }
+
+            public Endpoint build() {
+                return new Endpoint(this.url, this.headers);
+            }
+        }
+
+
+        @Override
+        public int describeContents() {
+            return 0;
+        }
+
+        @Override
+        public void writeToParcel(Parcel dest, int flags) {
+            dest.writeString(this.url);
+            dest.writeInt(this.headers.size());
+            for (Map.Entry<String, String> entry : this.headers.entrySet()) {
+                dest.writeString(entry.getKey());
+                dest.writeString(entry.getValue());
+            }
+        }
+
+        protected Endpoint(Parcel in) {
+            this.url = in.readString();
+            int headersSize = in.readInt();
+            this.headers = new HashMap<String, String>(headersSize);
+            for (int i = 0; i < headersSize; i++) {
+                String key = in.readString();
+                String value = in.readString();
+                this.headers.put(key, value);
+            }
+        }
+
+        public static final Creator<Endpoint> CREATOR = new Creator<Endpoint>() {
+            @Override
+            public Endpoint createFromParcel(Parcel source) {
+                return new Endpoint(source);
+            }
+
+            @Override
+            public Endpoint[] newArray(int size) {
+                return new Endpoint[size];
+            }
+        };
+
+        @Override
+        public String toString() {
+            return "{url:" + url+"}";
+        }
     }
 
     private OpenLocate(Configuration configuration) {
             this.context = configuration.context;
-            this.serverUrl = configuration.serverUrl;
-            this.headers = configuration.headers;
+            this.endpoints = configuration.endpoints;
             this.configuration = configuration;
             setPreferences();
     }
@@ -279,7 +452,12 @@ public class OpenLocate implements OpenLocateLocationTracker {
     private void setPreferences() {
         SharedPreferences preferences = context.getSharedPreferences(Constants.OPENLOCATE, Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = preferences.edit();
-        editor.putString(Constants.URL_KEY, configuration.getUrl());
+        try {
+            editor.putString(Constants.ENDPOINTS_KEY, Endpoint.toJson(configuration.getEndpoints()));
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
         editor.apply();
     }
 
@@ -413,8 +591,8 @@ public class OpenLocate implements OpenLocateLocationTracker {
     private void onFetchAdvertisingInfo(AdvertisingIdClient.Info info) {
         Intent intent = new Intent(context, LocationService.class);
 
-        intent.putExtra(Constants.URL_KEY, serverUrl);
-        intent.putExtra(Constants.HEADER_KEY, headers);
+        intent.putParcelableArrayListExtra(Constants.ENDPOINTS_KEY, endpoints);
+
         updateLocationConfigurationInfo(intent);
         updateFieldsConfigurationInfo(intent);
 
@@ -449,8 +627,8 @@ public class OpenLocate implements OpenLocateLocationTracker {
     }
 
     private static void saveConfiguration(Configuration configuration) throws InvalidConfigurationException {
-        if (TextUtils.isEmpty(configuration.serverUrl)) {
-            String message = "Invalid configuration. Please configure a valid url or header.";
+        if (configuration.endpoints.isEmpty()) {
+            String message = "Invalid configuration. Please configure a valid urls";
 
             Log.e(TAG, message);
             throw new InvalidConfigurationException(
@@ -458,9 +636,12 @@ public class OpenLocate implements OpenLocateLocationTracker {
             );
         }
 
-        if(!TextUtils.isEmpty(configuration.getUrl())) {
-            SharedPreferenceUtils.getInstance(configuration.context).setValue(Constants.URL_KEY, configuration.getUrl());
-            SharedPreferenceUtils.getInstance(configuration.context).saveMap(Constants.HEADER_KEY, configuration.getHeaders());
+        try {
+            String endpoins = Endpoint.toJson(configuration.endpoints);
+            SharedPreferenceUtils.getInstance(configuration.context).setValue(Constants.ENDPOINTS_KEY, endpoins);
+
+        } catch (JSONException e) {
+            e.printStackTrace();
         }
 
     }

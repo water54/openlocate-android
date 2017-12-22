@@ -22,7 +22,6 @@
 package com.openlocate.android.core;
 
 import android.content.Context;
-import android.content.Intent;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.runner.AndroidJUnit4;
 
@@ -30,7 +29,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 
 @RunWith(AndroidJUnit4.class)
@@ -43,25 +41,6 @@ public class ServiceUtilsTests {
         context = InstrumentationRegistry.getTargetContext();
     }
 
-    @Test
-    public void testIsServiceNotRunning() {
-        // Given
-        Intent intent = new Intent(context, LocationService.class);
-
-        intent.putExtra(Constants.URL_KEY, "http://httpbin.org/post");
-        intent.putExtra(Constants.ADVERTISING_ID_KEY, "1234");
-        intent.putExtra(Constants.LIMITED_AD_TRACKING_ENABLED_KEY, true);
-
-        intent.putExtra(Constants.LOCATION_ACCURACY_KEY, Constants.DEFAULT_LOCATION_ACCURACY);
-        intent.putExtra(Constants.LOCATION_INTERVAL_KEY, Constants.DEFAULT_LOCATION_INTERVAL_SEC);
-        intent.putExtra(Constants.TRANSMISSION_INTERVAL_KEY, Constants.DEFAULT_TRANSMISSION_INTERVAL_SEC);
-
-        // When
-        boolean isRunning = ServiceUtils.isServiceRunning(LocationService.class, context);
-
-        // Then
-        assertFalse(isRunning);
-    }
 
     @Test
     public void testServiceConstructor() {

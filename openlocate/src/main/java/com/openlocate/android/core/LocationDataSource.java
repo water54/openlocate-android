@@ -28,7 +28,9 @@ interface LocationDataSource {
 
     void add(OpenLocateLocation location);
 
-    List<OpenLocateLocation> popAll();
+    List<OpenLocateLocation> getSince(long millisecondsSince1970);
+
+    void deleteBefore(long millisecondsSince1970);
 
     long size();
 

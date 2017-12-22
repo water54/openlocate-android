@@ -21,14 +21,12 @@
  */
 package com.openlocate.android.core;
 
-import android.content.Context;
 import android.util.Log;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.HashMap;
 import java.util.List;
 
 final class LocationDispatcher {
@@ -36,33 +34,36 @@ final class LocationDispatcher {
     private static final String TAG = LocationDispatcher.class.getSimpleName();
     private static final String LOCATIONS_KEY = "locations";
 
-    void postLocations(HttpClient httpClient, String url, HashMap<String, String> headers, final LocationDataSource dataSource) {
-        final List<OpenLocateLocation> locations = dataSource.popAll();
+    List<OpenLocateLocation> postLocations(HttpClient httpClient, final OpenLocate.Endpoint endpoint, long sinceId, final LocationDataSource dataSource) {
+        final List<OpenLocateLocation> locations = dataSource.getSince(sinceId);
 
         if (locations == null || locations.isEmpty()) {
             Log.i(TAG, "Attempted to post locations, but found none to post.");
-            return;
+            return null;
         }
 
+        final String endpointUrl = endpoint.getUrl();
         httpClient.post(
-                url,
+                endpointUrl,
                 getLocationsParam(locations).toString(),
-                headers,
+                endpoint.getHeaders(),
                 new HttpClientCallback() {
                     @Override
                     public void onCompletion(HttpRequest request, HttpResponse response) {
-                        Log.i(TAG, "Successfully posted locations");
                         dataSource.close();
+                        Log.i(TAG, "Successfully posted locations to " + endpointUrl);
                     }
                 }, new HttpClientCallback() {
                     @Override
                     public void onCompletion(HttpRequest request, HttpResponse response) {
-                        dataSource.addAll(locations);
                         dataSource.close();
-                        Log.e(TAG, "Fail to post location");
+                        locations.clear();
+                        Log.e(TAG, "Fail to post location to " + endpointUrl);
                     }
                 }
         );
+
+        return locations;
     }
 
     private JSONObject getLocationsParam(List<OpenLocateLocation> locationsToPost) {

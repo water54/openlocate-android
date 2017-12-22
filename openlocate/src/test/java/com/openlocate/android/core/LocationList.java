@@ -22,10 +22,25 @@ final class LocationList implements LocationDataSource {
     }
 
     @Override
-    public List<OpenLocateLocation> popAll() {
-        List<OpenLocateLocation> locations = this.locations;
-        this.locations.clear();
+    public List<OpenLocateLocation> getSince(long millisecondsSince1970) {
+        List<OpenLocateLocation> locations = new ArrayList<OpenLocateLocation>();
+        for (OpenLocateLocation location : this.locations) {
+            if (location.getCreated().getTime() > millisecondsSince1970) {
+                locations.add(location);
+            }
+        }
         return locations;
+    }
+
+    @Override
+    public void deleteBefore(long millisecondsSince1970) {
+        List<OpenLocateLocation> locations = new ArrayList<OpenLocateLocation>();
+        for (OpenLocateLocation location : this.locations) {
+            if (location.getCreated().getTime() <= millisecondsSince1970) {
+                locations.add(location);
+            }
+        }
+        this.locations.removeAll(locations);
     }
 
     @Override

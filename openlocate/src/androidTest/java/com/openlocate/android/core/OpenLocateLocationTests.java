@@ -24,6 +24,8 @@ package com.openlocate.android.core;
 import android.location.Location;
 import android.support.test.runner.AndroidJUnit4;
 
+import com.google.android.gms.ads.identifier.AdvertisingIdClient;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Test;
@@ -49,9 +51,9 @@ public class OpenLocateLocationTests {
         location.setLongitude(lng);
         location.setAccuracy((float) accuracy);
 
-        AdvertisingInfo info = new AdvertisingInfo(adId, adOptOut);
+        AdvertisingIdClient.Info info = new AdvertisingIdClient.Info(adId, adOptOut);
 
-        OpenLocateLocation openLocateLocation = new OpenLocateLocation(location, info);
+        OpenLocateLocation openLocateLocation = new OpenLocateLocation(location, info, null);
 
         // When
         JSONObject json = openLocateLocation.getJson();

@@ -28,7 +28,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 final class DatabaseHelper extends SQLiteOpenHelper {
 
     private static final String DATABASE_NAME = "OpenLocate.db";
-    private static final int DATABASE_VERSION = 1;
+    private static final int DATABASE_VERSION = 2;
 
     DatabaseHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);

@@ -28,6 +28,7 @@ import com.google.android.gms.ads.identifier.AdvertisingIdClient;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
 public final class OpenLocateLocation implements JsonObjectType {
@@ -61,9 +62,14 @@ public final class OpenLocateLocation implements JsonObjectType {
 
     private static final String ADVERTISING_ID_TYPE = "aaid";
 
+    private Date created;
     private LocationInfo location;
     private AdvertisingIdClient.Info advertisingInfo;
     private InformationFields informationFields;
+
+    public Date getCreated() {
+        return created;
+    }
 
     public LocationInfo getLocation() {
         return location;
@@ -81,23 +87,22 @@ public final class OpenLocateLocation implements JsonObjectType {
         this.advertisingInfo = advertisingInfo;
     }
 
-
-
     public static OpenLocateLocation from(Location location,
                                           AdvertisingIdClient.Info advertisingInfo, InformationFields informationFields) {
         return new OpenLocateLocation(location, advertisingInfo, informationFields);
-
     }
 
-    private OpenLocateLocation(
+    OpenLocateLocation(
             Location location,
             AdvertisingIdClient.Info advertisingInfo, InformationFields informationFields) {
         this.location = new LocationInfo(location);
         this.advertisingInfo = advertisingInfo;
         this.informationFields = informationFields;
+        this.created = new Date();
     }
 
-    OpenLocateLocation(String jsonString) {
+    OpenLocateLocation(Date created, String jsonString) {
+        this.created = created;
         try {
             JSONObject json = new JSONObject(jsonString);
 

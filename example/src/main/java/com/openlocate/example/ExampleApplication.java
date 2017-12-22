@@ -1,9 +1,10 @@
 package com.openlocate.example;
 
 import android.app.Application;
+
 import com.openlocate.android.core.OpenLocate;
 
-import java.util.HashMap;
+import java.util.ArrayList;
 
 public class ExampleApplication extends Application {
 
@@ -11,11 +12,13 @@ public class ExampleApplication extends Application {
     public void onCreate() {
         super.onCreate();
 
-        HashMap<String, String> headers = new HashMap<>();
-        headers.put("Authorization", "Bearer " + BuildConfig.TOKEN);
+        ArrayList<OpenLocate.Endpoint> endpoints = new ArrayList<>();
 
-        OpenLocate.Configuration configuration = new OpenLocate.Configuration.Builder(this, BuildConfig.URL)
-                .setHeaders(headers)
+        endpoints.add(OpenLocate.Endpoint.builder(BuildConfig.URL)
+                .withHeader("Authorization", "Bearer " + BuildConfig.TOKEN)
+                .build());
+
+        OpenLocate.Configuration configuration = new OpenLocate.Configuration.Builder(this, endpoints)
                 .withoutDeviceManufacturer()
                 .withoutDeviceModel()
                 .build();

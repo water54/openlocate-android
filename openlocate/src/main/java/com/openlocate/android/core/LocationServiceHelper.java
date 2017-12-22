@@ -30,12 +30,12 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.location.Location;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
-import android.os.Build;
 
 import com.google.android.gms.ads.identifier.AdvertisingIdClient;
 import com.google.android.gms.common.ConnectionResult;
@@ -46,7 +46,9 @@ import com.google.android.gms.gcm.Task;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 
-import java.util.HashMap;
+import org.json.JSONException;
+
+import java.util.ArrayList;
 
 final class LocationServiceHelper {
 
@@ -66,8 +68,7 @@ final class LocationServiceHelper {
     private LocationDataSource locations;
     private LocationServiceHelper.LocationListener locationListener;
 
-    private String url;
-    private HashMap<String, String> headers;
+    private ArrayList<OpenLocate.Endpoint> endpoints;
 
     private AdvertisingIdClient.Info advertisingInfo = new AdvertisingIdClient.Info("", true);
 
@@ -177,10 +178,7 @@ final class LocationServiceHelper {
     private void setValues(Intent intent) {
 
 
-        Log.d(TAG, "setValues: " + intent.getStringExtra(Constants.URL_KEY));
-
-        url = intent.getStringExtra(Constants.URL_KEY);
-        headers = (HashMap<String, String>) intent.getSerializableExtra(Constants.HEADER_KEY);
+        endpoints = intent.getParcelableArrayListExtra(Constants.ENDPOINTS_KEY);
 
         advertisingInfo = new AdvertisingIdClient.Info(
                 intent.getStringExtra(Constants.ADVERTISING_ID_KEY),
@@ -272,15 +270,16 @@ final class LocationServiceHelper {
 
     private void scheduleDispatchLocationService() {
 
-        Log.e(TAG, "Google Api Client Connection Suspended : scheduleDispatchLocationService" + url );
-
-        if(url == null || headers == null) {
+        if(endpoints == null) {
             return;
         }
 
         Bundle bundle = new Bundle();
-        bundle.putString(Constants.URL_KEY, url);
-        bundle.putString(Constants.HEADER_KEY, headers.toString());
+        try {
+            bundle.putString(Constants.ENDPOINTS_KEY, OpenLocate.Endpoint.toJson(endpoints));
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
 
         PeriodicTask task = new PeriodicTask.Builder()
                 .setExtras(bundle)
@@ -377,12 +376,8 @@ final class LocationServiceHelper {
         return locations;
     }
 
-    String getUrl() {
-        return url;
-    }
-
-    HashMap<String, String> getHeaders() {
-        return headers;
+    public void setEndpoints(ArrayList<OpenLocate.Endpoint> endpoints) {
+        this.endpoints = endpoints;
     }
 
     AdvertisingIdClient.Info getAdvertisingInfo() {

@@ -28,6 +28,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteStatement;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 final class LocationTable {
@@ -36,28 +37,38 @@ final class LocationTable {
 
     private static final String COLUMN_ID = "_id";
     private static final String COLUMN_LOCATION = "location";
-    private static final String QUERY_LIMIT = "500";
+    private static final String QUERY_LIMIT = "1500";
 
-    private static final int COLUMN_LOCATION_INDEX = 1;
+    private static final int COLUMN_LOCATION_INDEX = 2;
+
+    public static final String COLUMN_CREATED_AT = "created_at";
 
     private static final String CREATE_TABLE_SQL = "CREATE TABLE IF NOT EXISTS "
             + TABLE_NAME
             + " ("
             + COLUMN_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
+            + COLUMN_CREATED_AT + " INTEGER NOT NULL, "
             + COLUMN_LOCATION + " TEXT NOT NULL"
             + ");";
+
+    private static final String CREATE_INDEX_SQL = "CREATE INDEX IF NOT EXISTS `"
+            + COLUMN_CREATED_AT + "_index`" + "ON `" + TABLE_NAME
+            + "` (`" + COLUMN_CREATED_AT + "` ASC);";
+
     private static final String DROP_TABLE_SQL = "DROP TABLE IF EXISTS ";
     private static final String BULK_INSERT_LOCATION = "INSERT INTO "
             + TABLE_NAME
-            + " (" + COLUMN_LOCATION + ")"
-            + " VALUES (?);";
+            + " (" + COLUMN_LOCATION + ", " + COLUMN_CREATED_AT + ")"
+            + " VALUES (?, ?);";
 
     static void onOpen(SQLiteDatabase db) {
         db.execSQL(CREATE_TABLE_SQL);
+        db.execSQL(CREATE_INDEX_SQL);
     }
 
     static void createIfRequired(SQLiteDatabase db) {
         db.execSQL(CREATE_TABLE_SQL);
+        db.execSQL(CREATE_INDEX_SQL);
     }
 
     static void upgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
@@ -71,6 +82,7 @@ final class LocationTable {
         }
 
         ContentValues values = new ContentValues();
+        values.put(COLUMN_CREATED_AT, location.getCreated().getTime());
         values.put(COLUMN_LOCATION, location.getJson().toString());
         database.insert(TABLE_NAME, null, values);
     }
@@ -86,6 +98,7 @@ final class LocationTable {
         for (OpenLocateLocation location : locations) {
             statement.clearBindings();
             statement.bindString(COLUMN_LOCATION_INDEX, location.getJson().toString());
+            statement.bindLong(2, location.getCreated().getTime());
             statement.execute();
         }
 
@@ -101,21 +114,23 @@ final class LocationTable {
         return DatabaseUtils.queryNumEntries(database, TABLE_NAME);
     }
 
-    static List<OpenLocateLocation> popAll(SQLiteDatabase database) {
+    static List<OpenLocateLocation> getSince(SQLiteDatabase database, long millisecondsSince1970) {
         if (database == null) {
             return null;
         }
 
-        Cursor cursor = database.query(TABLE_NAME, null, null, null, null, null, null, QUERY_LIMIT);
+        Cursor cursor = database.query(TABLE_NAME, null, LocationTable.COLUMN_CREATED_AT + " > " + millisecondsSince1970,
+                null, null, null, LocationTable.COLUMN_CREATED_AT, QUERY_LIMIT);
 
         if (cursor == null || cursor.isClosed()) {
             return null;
         }
 
-        List<OpenLocateLocation> locations = getLocations(cursor);
-        database.delete(TABLE_NAME, null, null);
+        return getLocations(cursor);
+    }
 
-        return locations;
+    static void deleteBefore(SQLiteDatabase database, long millisecondsSince1970) {
+        database.delete(TABLE_NAME, LocationTable.COLUMN_CREATED_AT + " <= " + millisecondsSince1970, null);
     }
 
     private static List<OpenLocateLocation> getLocations(Cursor cursor) {
@@ -128,7 +143,9 @@ final class LocationTable {
                     break;
                 }
 
-                OpenLocateLocation location = new OpenLocateLocation(cursor.getString(COLUMN_LOCATION_INDEX));
+                Date date = new Date(cursor.getLong(cursor.getColumnIndex(COLUMN_CREATED_AT)));
+                String json = cursor.getString(cursor.getColumnIndex(COLUMN_LOCATION));
+                OpenLocateLocation location = new OpenLocateLocation(date, json);
                 locations.add(location);
             } while (cursor.moveToNext());
         }

@@ -90,6 +90,8 @@ public class MyApplication extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
+        
+      
         OpenLocate.Configuration config = new OpenLocate.Configuration.Builder(this, BuildConfig.URL)
             .setHeaders(<Your Headers>)
             .build();
@@ -98,6 +100,35 @@ public class MyApplication extends Application {
     }
 }
 ```
+#### Configuring multiple endpoints
+
+If you would like to send the data to multiple endpoints, you can do so by creating multiple `OpenLocate.Endpoint` objects and passing them in to the `OpenLocate.Configuration` object:
+
+```java
+public class MyApplication extends Application {
+    
+     @Override
+    public void onCreate() {
+        super.onCreate();
+        ArrayList<OpenLocate.Endpoint> endpoints = new ArrayList<>();
+         
+        endpoints.add(OpenLocate.Endpoint.builder(<URL>)
+                 .withHeader("<Header's key>", "Header's value")
+                 .build());
+         
+        endpoints.add(OpenLocate.Endpoint.builder(<ANOTHER_URL>)
+                 .withHeader("<Another header's key>", " Another header's value")
+                 .build());
+         
+        OpenLocate.Configuration configuration = new OpenLocate.Configuration.Builder(this, endpoints)
+                 .build();
+         
+        OpenLocate.initialize(configuration);
+     }
+}
+
+```
+
 
 #### For example, to send data to SafeGraph:
 

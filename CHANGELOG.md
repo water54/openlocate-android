@@ -2,7 +2,16 @@
 
 `OpenLocate-Android` adheres to [Semantic Versioning](http://semver.org/).
 
-## [1.0.1](https://github.com/OpenLocate/openlocate-android/tree/1.0.1)
+## [1.1.0](https://github.com/OpenLocate/openlocate-ios/tag/1.1.0)
+
+#### Added
+
+- Add ability to send location data to mulitple URL endpoints
+- Change default transmission interval to 6 hours instead of 8 hours
+
+---
+
+## [1.0.1](https://github.com/OpenLocate/openlocate-android/tag/1.0.1)
 
 #### Fixed
 
@@ -10,7 +19,7 @@
 
 ---
 
-## [1.0.0](https://github.com/OpenLocate/openlocate-android/tree/1.0.0)
+## [1.0.0](https://github.com/OpenLocate/openlocate-android/tag/1.0.0)
 
 #### Added
 

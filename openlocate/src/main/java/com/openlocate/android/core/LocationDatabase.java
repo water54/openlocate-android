@@ -44,8 +44,13 @@ final class LocationDatabase implements LocationDataSource {
     }
 
     @Override
-    public List<OpenLocateLocation> popAll() {
-        return LocationTable.popAll(helper.getWritableDatabase());
+    public List<OpenLocateLocation> getSince(long millisecondsSince1970) {
+        return LocationTable.getSince(helper.getWritableDatabase(), millisecondsSince1970);
+    }
+
+    @Override
+    public void deleteBefore(long millisecondsSince1970) {
+        LocationTable.deleteBefore(helper.getWritableDatabase(), millisecondsSince1970);
     }
 
     @Override
