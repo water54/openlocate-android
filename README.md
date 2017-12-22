@@ -102,7 +102,7 @@ public class MyApplication extends Application {
 ```
 #### Configuring multiple endpoints
 
-If you would like to send the data to multiple endpoints, you can do so by creating multiple `OpenLocate.Endpoint` objects and passing them in to the `OpenLocate.Configuration` object:
+If you would like to send the data to multiple endpoints, you can do so by creating multiple `OpenLocate.Endpoint` objects and passing them in to the `OpenLocate.Configuration` object. If data fails to be sent to any given endpoint, data will be saved locally and re-tried in later transmissions. A maximum of 10 days worth of data is kept.
 
 ```java
 public class MyApplication extends Application {
