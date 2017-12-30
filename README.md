@@ -402,52 +402,55 @@ openLocate.getCurrentLocation(new OpenLocateLocationCallback() {
 
 This is a sample request body sent by the SDK.
 ```json
-[
-  {
-    "latitude": 37.773972,
-    "longitude": -122.431297,
-    "horizontal_accuracy": "23.670000076293945",
-    "utc_timestamp": 1508369672,
-    "course": "0.0",
-    "speed": "0.0",
-    "altitude": 0,
-    "ad_id": "f109e57e-a02e-41d3-b7c4-c906d1b92331",
-    "ad_opt_out": false,
-    "id_type": "aaid",
-    "device_manufacturer": "motorola",
-    "device_model": "Moto G (5S) Plus",
-    "is_charging": true,
-    "os_version": "Android 7.1.1",
-    "carrier_name": "T Mobile",
-    "wifi_ssid": "\"Jungle\"",
-    "wifi_bssid": "10:fe:ed:8d:b5:7c",
-    "connection_type": "wifi",
-    "location_method": "gps",
-    "location_context": "bground"
-  },
-  {
-    "latitude": 37.773972,
-    "longitude": -122.431297,
-    "horizontal_accuracy": "23.670000076293945",
-    "utc_timestamp": 1508369683,
-    "course": "0.0",
-    "speed": "0.0",
-    "altitude": 0,
-    "ad_id": "f109e57e-a02e-41d3-b7c4-c906d1b92331",
-    "ad_opt_out": false,
-    "id_type": "aaid",
-    "device_manufacturer": "motorola",
-    "device_model": "Moto G (5S) Plus",
-    "is_charging": true,
-    "os_version": "Android 7.1.1",
-    "carrier_name": "T Mobile",
-    "wifi_ssid": "\"Jungle\"",
-    "wifi_bssid": "10:fe:ed:8d:b5:7c",
-    "connection_type": "wifi",
-    "location_method": "gps",
-    "location_context": "bground"
-  }
-]
+{
+"locations":
+	[
+		{
+			"latitude": 37.773972,
+			"longitude": -122.431297,
+			"horizontal_accuracy": "23.670000076293945",
+			"utc_timestamp": 1508369672,
+			"course": "0.0",
+			"speed": "0.0",
+			"altitude": 0,
+			"ad_id": "f109e57e-a02e-41d3-b7c4-c906d1b92331",
+			"ad_opt_out": false,
+			"id_type": "aaid",
+			"device_manufacturer": "motorola",
+			"device_model": "Moto G (5S) Plus",
+			"is_charging": true,
+			"os_version": "Android 7.1.1",
+			"carrier_name": "T Mobile",
+			"wifi_ssid": "\"Jungle\"",
+			"wifi_bssid": "10:fe:ed:8d:b5:7c",
+			"connection_type": "wifi",
+			"location_method": "gps",
+			"location_context": "bground"
+		},
+		{
+			"latitude": 37.773972,
+			"longitude": -122.431297,
+			"horizontal_accuracy": "23.670000076293945",
+			"utc_timestamp": 1508369683,
+			"course": "0.0",
+			"speed": "0.0",
+			"altitude": 0,
+			"ad_id": "f109e57e-a02e-41d3-b7c4-c906d1b92331",
+			"ad_opt_out": false,
+			"id_type": "aaid",
+			"device_manufacturer": "motorola",
+			"device_model": "Moto G (5S) Plus",
+			"is_charging": true,
+			"os_version": "Android 7.1.1",
+			"carrier_name": "T Mobile",
+			"wifi_ssid": "\"Jungle\"",
+			"wifi_bssid": "10:fe:ed:8d:b5:7c",
+			"connection_type": "wifi",
+			"location_method": "gps",
+			"location_context": "bground"
+		}
+	]
+}
 ```
 
 If you want to have the SDK send data to your own AWS s3 environment for example, look into setting up an [Kinesis firehose](https://aws.amazon.com/kinesis/firehose/) according to the SDK request above.
