@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.BatteryManager;
@@ -127,15 +128,14 @@ final class InformationFieldsFactory {
 
     private void updateConnectionType() {
         ConnectivityManager connectivityManager = (ConnectivityManager) context.getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);
-        boolean connected = connectivityManager.getActiveNetworkInfo().isConnected();
+        NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
 
-        if (!connected) {
+        if (networkInfo == null || networkInfo.isConnected() == false) {
             connectionType = "none";
             return;
         }
 
-        int type = connectivityManager.getActiveNetworkInfo().getType();
-
+        int type = networkInfo.getType();
         switch (type) {
             case ConnectivityManager.TYPE_WIFI:
                 connectionType = "wifi";

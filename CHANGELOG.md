@@ -2,6 +2,14 @@
 
 `OpenLocate-Android` adheres to [Semantic Versioning](http://semver.org/).
 
+## [1.1.1](https://github.com/OpenLocate/openlocate-ios/tag/1.1.1)
+
+#### Fixed
+
+- Fix crash that may occour if phone has no active network.
+
+---
+
 ## [1.1.0](https://github.com/OpenLocate/openlocate-ios/tag/1.1.0)
 
 #### Added
