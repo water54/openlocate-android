@@ -2,6 +2,12 @@
 
 `OpenLocate-Android` adheres to [Semantic Versioning](http://semver.org/).
 
+## [1.1.2](https://github.com/OpenLocate/openlocate-ios/tag/1.1.2)
+
+#### Fixed
+
+- Fix crash that may occour if a null `Activity` is passed to `startTracking(...)` method
+
 ## [1.1.1](https://github.com/OpenLocate/openlocate-ios/tag/1.1.1)
 
 #### Fixed

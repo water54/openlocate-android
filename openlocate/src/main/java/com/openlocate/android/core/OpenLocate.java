@@ -498,12 +498,14 @@ public class OpenLocate implements OpenLocateLocationTracker {
 
         if (LocationService.hasLocationPermission(context)) {
             onPermissionsGranted();
-        } else {
+        } else if (activity != null) {
             ActivityCompat.requestPermissions(
                     activity,
                     new String[]{Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION},
                     LOCATION_PERMISSION_REQUEST);
             startCheckingPermissionTask();
+        } else {
+            Log.w(TAG, "Location Permission has not been accepted or prompted.");
         }
     }
 
