@@ -2,6 +2,12 @@
 
 `OpenLocate-Android` adheres to [Semantic Versioning](http://semver.org/).
 
+## [1.1.3](https://github.com/OpenLocate/openlocate-ios/tag/1.1.3)
+
+#### Fixed
+
+- Fix crash if phone has no telephony manager
+
 ## [1.1.2](https://github.com/OpenLocate/openlocate-ios/tag/1.1.2)
 
 #### Fixed

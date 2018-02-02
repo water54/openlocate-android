@@ -115,21 +115,31 @@ final class InformationFieldsFactory {
 
     private void updateCarrierName() {
         TelephonyManager telephonyManager = (TelephonyManager) context.getApplicationContext().getSystemService(Context.TELEPHONY_SERVICE);
-        carrierName = telephonyManager.getNetworkOperatorName();
+        if (telephonyManager != null ) {
+            carrierName = telephonyManager.getNetworkOperatorName();
+        }
     }
 
     private void updateWifiInfo() {
         WifiManager wifiManager = (WifiManager) context.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
-        WifiInfo wifiInfo = wifiManager.getConnectionInfo();
+        if (wifiManager != null) {
+            WifiInfo wifiInfo = wifiManager.getConnectionInfo();
 
-        wifiSsid = wifiInfo.getSSID();
-        wifiBssid = wifiInfo.getBSSID();
+            if (wifiInfo != null) {
+                wifiSsid = wifiInfo.getSSID();
+                wifiBssid = wifiInfo.getBSSID();
+            };
+        }
     }
 
     private void updateConnectionType() {
         ConnectivityManager connectivityManager = (ConnectivityManager) context.getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
+        if (connectivityManager == null) {
+            connectionType = "none";
+            return;
+        }
 
+        NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
         if (networkInfo == null || networkInfo.isConnected() == false) {
             connectionType = "none";
             return;
