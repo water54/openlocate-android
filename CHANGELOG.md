@@ -2,6 +2,12 @@
 
 `OpenLocate-Android` adheres to [Semantic Versioning](http://semver.org/).
 
+## [1.1.4](https://github.com/OpenLocate/openlocate-ios/tag/1.1.4)
+
+#### Fixed
+
+- Fix crash that occours if advertising identifier fetch throws an exception (#72)
+
 ## [1.1.3](https://github.com/OpenLocate/openlocate-ios/tag/1.1.3)
 
 #### Fixed

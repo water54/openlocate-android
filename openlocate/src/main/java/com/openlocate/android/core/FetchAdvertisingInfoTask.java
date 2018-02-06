@@ -52,7 +52,7 @@ final class FetchAdvertisingInfoTask extends AsyncTask<Void, Void, Void> {
         } catch (IOException
                 | GooglePlayServicesNotAvailableException
                 | GooglePlayServicesRepairableException e) {
-            Log.e(TAG, e.getMessage());
+            Log.e(TAG, e.getMessage() != null ? e.getMessage() : "Failed to get ad id.");
         }
 
         return null;
