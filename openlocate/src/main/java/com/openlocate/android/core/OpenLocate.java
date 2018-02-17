@@ -31,6 +31,7 @@ import android.os.Parcel;
 import android.os.Parcelable;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
@@ -602,7 +603,8 @@ public class OpenLocate implements OpenLocateLocationTracker {
             updateAdvertisingInfo(intent, info.getId(), info.isLimitAdTrackingEnabled());
         }
 
-        context.startService(intent);
+        ContextCompat.startForegroundService(context, intent);
+
         setStartedPreferences();
     }
 
