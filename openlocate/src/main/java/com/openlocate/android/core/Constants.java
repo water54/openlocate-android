@@ -27,6 +27,7 @@ final class Constants {
     static final long DEFAULT_LOCATION_INTERVAL_SEC = 5 * 60;
     static final long DEFAULT_FAST_LOCATION_INTERVAL_SEC = 1 * 60;
     static final long DEFAULT_TRANSMISSION_INTERVAL_SEC = 6 * 60 * 60;
+    static final long SERVICE_CHECK_INTERVAL_MSEC = 5 * 60 * 1000;
     static final LocationAccuracy DEFAULT_LOCATION_ACCURACY = LocationAccuracy.HIGH;
 
     // Location service intent keys
@@ -48,6 +49,7 @@ final class Constants {
     static final String LOCATION_INTERVAL_CHANGED = Constants.class.getCanonicalName() + ".LocationIntervalChanged";
     static final String LOCATION_ACCURACY_CHANGED = Constants.class.getCanonicalName() + ".LocationAccuracyChanged";
     static final String TRANSMISSION_INTERVAL_CHANGED = Constants.class.getCanonicalName() + ".TransmissionIntervalChanged";
+
     public static final String OPENLOCATE = "com.openlocate.android";
     public static final String IS_SERVICE_STARTED = "is_service_running";
 }
