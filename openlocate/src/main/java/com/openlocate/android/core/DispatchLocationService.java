@@ -22,7 +22,6 @@
 package com.openlocate.android.core;
 
 import android.database.sqlite.SQLiteOpenHelper;
-import android.os.Bundle;
 
 import com.google.android.gms.gcm.GcmNetworkManager;
 import com.google.android.gms.gcm.GcmTaskService;

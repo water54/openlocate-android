@@ -32,6 +32,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.location.Location;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.content.LocalBroadcastManager;
@@ -75,17 +76,20 @@ final class LocationServiceHelper {
     private Context context;
     private OpenLocate.Configuration configuration;
 
+    private Intent restartServiceIntent;
+
     LocationServiceHelper(Context context) {
         this.context = context;
     }
 
     void onCreate() {
-        SQLiteOpenHelper helper = new DatabaseHelper(context);
-        locations = new LocationDatabase(helper);
+        locations = new LocationDatabase(new DatabaseHelper(context));
         networkManager = GcmNetworkManager.getInstance(context);
         alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
+
         registerForLocalBroadcastEvents();
         setServiceStatusOnStart();
+
         Log.d(TAG, "Inside onCreate of Location service Helper");
     }
 
@@ -100,33 +104,28 @@ final class LocationServiceHelper {
     void onDestroy() {
         unschedulePeriodicTasks();
         stopLocationUpdates();
+
         networkManager = null;
         locations = null;
+
         setServiceStatusOnStop();
-        //disableAlarms();
 
         if (context.getClass().isInstance(LocationService.class)) {
             ((LocationService) context).stopForeground(true);
         }
+
         Log.d(TAG, "Inside onDestroy of Location service Helper");
     }
 
-    void disableAlarms() {
-        Intent intent = new Intent(context, LocationService.class);
-        intent.putExtra("is_alarm", true);
-        PendingIntent pendingIntent = PendingIntent.getService(context, 0, intent, 0);
-        alarmManager.cancel(pendingIntent);
-    }
-
     void onStartCommand(Intent intent) {
-        if (intent.getExtras().getBoolean("is_alarm")) {
-            if (googleApiClient == null || !googleApiClient.isConnected()) {
-                connectGoogleClient();
-            }
-            return;
-        }
+        restartServiceIntent = intent;
+
         setValues(intent);
-        connectGoogleClient();
+
+        if (googleApiClient == null ||
+                googleApiClient.isConnected() == false && googleApiClient.isConnecting() == false) {
+            connectGoogleClient();
+        }
 
         /* Starting the service as foreground service for Android Oreo.
          * If the service is not foreground, service will be killed when the app is killed.
@@ -176,8 +175,6 @@ final class LocationServiceHelper {
 
     @SuppressWarnings("unchecked")
     private void setValues(Intent intent) {
-
-
         endpoints = intent.getParcelableArrayListExtra(Constants.ENDPOINTS_KEY);
 
         advertisingInfo = new AdvertisingIdClient.Info(
@@ -246,15 +243,16 @@ final class LocationServiceHelper {
 
     public void onTaskRemoved(Intent rootIntent) {
         Log.d(TAG, "TASK REMOVED");
-        setAlarmManager();
+
+        setRestartServiceAlarmManager();
         unschedulePeriodicTasks();
     }
 
-    private void setAlarmManager() {
-        Intent intent = new Intent(context, LocationService.class);
-        intent.putExtra("is_alarm", true);
-        PendingIntent pendingIntent = PendingIntent.getService(context, 0, intent, PendingIntent.FLAG_ONE_SHOT);
-        alarmManager.set(AlarmManager.ELAPSED_REALTIME_WAKEUP, 1000, pendingIntent);
+    private void setRestartServiceAlarmManager() {
+        if (Build.VERSION.SDK_INT < 26 && restartServiceIntent != null && LocationService.isLocationEnabled(context)) {
+            PendingIntent pendingIntent = PendingIntent.getService(context, 0, restartServiceIntent, PendingIntent.FLAG_ONE_SHOT);
+            alarmManager.set(AlarmManager.ELAPSED_REALTIME_WAKEUP, SystemClock.elapsedRealtime() + Constants.SERVICE_CHECK_INTERVAL_MSEC, pendingIntent);
+        }
     }
 
     private void stopLocationUpdates() {
@@ -330,8 +328,8 @@ final class LocationServiceHelper {
 
         @Override
         public void onLocationChanged(Location location) {
-
             Log.v(TAG, location.toString());
+
             locations.add(
                     OpenLocateLocation.from(
                             location,
@@ -339,14 +337,13 @@ final class LocationServiceHelper {
                             InformationFieldsFactory.collectInformationFields(context, configuration)
                     )
             );
-            Log.v(TAG, "COUNT - " + locations.size());
 
+            Log.v(TAG, "COUNT - " + locations.size());
         }
     }
 
     private void startForeground() {
-        Notification notification = new Notification.Builder(context)
-                    .build();
+        Notification notification = new Notification.Builder(context).build();
         ((LocationService) context).startForeground(FOREGROUND_SERVICE_TAG, notification);
     }
 
