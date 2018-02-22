@@ -2,6 +2,12 @@
 
 `OpenLocate-Android` adheres to [Semantic Versioning](http://semver.org/).
 
+## [1.1.5](https://github.com/OpenLocate/openlocate-ios/tag/1.1.5)
+
+#### Fixed
+
+- Fix crash on Android O devices when the service was restarted
+
 ## [1.1.4](https://github.com/OpenLocate/openlocate-ios/tag/1.1.4)
 
 #### Fixed
