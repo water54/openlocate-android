@@ -117,10 +117,15 @@ final class LocationServiceHelper {
         Log.d(TAG, "Inside onDestroy of Location service Helper");
     }
 
-    void onStartCommand(Intent intent) {
-        restartServiceIntent = intent;
+    boolean onStartCommand(Intent intent) {
 
-        setValues(intent);
+        boolean success = setValues(intent);
+
+        if (success == false) {
+            return false;
+        }
+
+        restartServiceIntent = intent;
 
         if (googleApiClient == null ||
                 googleApiClient.isConnected() == false && googleApiClient.isConnecting() == false) {
@@ -133,6 +138,8 @@ final class LocationServiceHelper {
         if (Build.VERSION.SDK_INT >= 26) {
             startForeground();
         }
+
+        return true;
     }
 
     private BroadcastReceiver locationIntervalChangedReceiver = new BroadcastReceiver() {
@@ -174,7 +181,9 @@ final class LocationServiceHelper {
     }
 
     @SuppressWarnings("unchecked")
-    private void setValues(Intent intent) {
+    private boolean setValues(Intent intent) {
+        configuration = intent.getExtras().getParcelable(Constants.INTENT_CONFIGURATION);
+
         endpoints = intent.getParcelableArrayListExtra(Constants.ENDPOINTS_KEY);
 
         advertisingInfo = new AdvertisingIdClient.Info(
@@ -185,11 +194,12 @@ final class LocationServiceHelper {
         setLocationRequestIntervalInSecs(intent);
         setTransmissionIntervalInSecs(intent);
         setLocationAccuracy(intent);
-        setFieldsConfiguration(intent);
-    }
 
-    private void setFieldsConfiguration(Intent intent) {
-        configuration = intent.getExtras().getParcelable(Constants.INTENT_CONFIGURATION);
+        if (configuration == null || endpoints == null || advertisingInfo == null) {
+            return false;
+        }
+
+        return true;
     }
 
     private void setLocationRequestIntervalInSecs(Intent intent) {
@@ -201,7 +211,10 @@ final class LocationServiceHelper {
     }
 
     private void setLocationAccuracy(Intent intent) {
-        accuracy = (LocationAccuracy) intent.getSerializableExtra(Constants.LOCATION_ACCURACY_KEY);
+        LocationAccuracy accuracy = (LocationAccuracy) intent.getSerializableExtra(Constants.LOCATION_ACCURACY_KEY);
+        if (accuracy != null) {
+            this.accuracy = accuracy;
+        }
     }
 
     private void connectGoogleClient() {
@@ -256,7 +269,7 @@ final class LocationServiceHelper {
     }
 
     private void stopLocationUpdates() {
-        if (googleApiClient != null) {
+        if (googleApiClient != null && googleApiClient.isConnected() && locationListener != null) {
             LocationServices.FusedLocationApi.removeLocationUpdates(googleApiClient, locationListener);
         }
         locationListener = null;
