@@ -2,6 +2,12 @@
 
 `OpenLocate-Android` adheres to [Semantic Versioning](http://semver.org/).
 
+## [1.1.6](https://github.com/OpenLocate/openlocate-ios/tag/1.1.6)
+
+#### Fixed
+
+- Fix crash that may occour on the location service if SDK is not initialized correctly.
+
 ## [1.1.5](https://github.com/OpenLocate/openlocate-ios/tag/1.1.5)
 
 #### Fixed
