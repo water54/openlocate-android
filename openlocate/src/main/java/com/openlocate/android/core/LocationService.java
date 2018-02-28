@@ -58,8 +58,12 @@ public class LocationService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        helper.onStartCommand(intent);
         Log.d(TAG, "Inside onStartCommand of Location service ");
+        boolean success = helper.onStartCommand(intent);
+        if (success == false) {
+            Log.w(TAG, "Could not start Location Service");
+            stopSelf();
+        }
         return START_REDELIVER_INTENT;
     }
 

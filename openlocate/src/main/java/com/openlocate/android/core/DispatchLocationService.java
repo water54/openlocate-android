@@ -84,6 +84,7 @@ final public class DispatchLocationService extends GcmTaskService {
             }
 
             dataSource.deleteBefore(min);
+            dataSource.close();
         }
 
         return GcmNetworkManager.RESULT_SUCCESS;
