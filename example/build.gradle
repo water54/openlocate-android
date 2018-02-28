@@ -26,8 +26,8 @@ def safegraphProviderId
 
 if (project.file('local.properties').canRead()) {
     properties.load(new FileInputStream(project.file('local.properties')))
-    safegraphToken = properties.getProperty('safegraph.token')
-    safegraphProviderId = properties.getProperty('safegraph.providerId')
+    safegraphToken = properties.getProperty('safegraph.token').trim()
+    safegraphProviderId = properties.getProperty('safegraph.providerId').trim()
 
 } else {
     throw new GradleException("Could not read local.properties!")
