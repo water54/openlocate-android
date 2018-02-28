@@ -50,18 +50,18 @@ final class LocationDispatcher {
                 new HttpClientCallback() {
                     @Override
                     public void onCompletion(HttpRequest request, HttpResponse response) {
-                        dataSource.close();
                         Log.i(TAG, "Successfully posted locations to " + endpointUrl);
                     }
                 }, new HttpClientCallback() {
                     @Override
                     public void onCompletion(HttpRequest request, HttpResponse response) {
-                        dataSource.close();
                         locations.clear();
                         Log.e(TAG, "Fail to post location to " + endpointUrl);
                     }
                 }
         );
+
+        dataSource.close();
 
         return locations;
     }
