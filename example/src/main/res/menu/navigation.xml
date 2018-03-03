@@ -9,9 +9,4 @@
         app:showAsAction="always"
         />
 
-    <item
-        android:id="@+id/navigation_places"
-        android:icon="@drawable/ic_action_places"
-        app:showAsAction="always"
-        android:title="@string/places" />
 </menu>

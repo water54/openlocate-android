@@ -30,18 +30,18 @@ import android.view.MenuItem;
 
 import com.crashlytics.android.Crashlytics;
 import com.openlocate.example.R;
-import com.openlocate.example.fragments.PlaceFragment;
 import com.openlocate.example.fragments.TrackFragment;
 
 import io.fabric.sdk.android.Fabric;
 
 public class MainActivity extends AppCompatActivity {
-    private boolean showReloadPlacesButton = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         Fabric.with(this, new Crashlytics());
+
         setContentView(R.layout.activity_main);
 
         initializeBottomNavigationView();
@@ -63,21 +63,11 @@ public class MainActivity extends AppCompatActivity {
         public boolean onNavigationItemSelected(@NonNull MenuItem item) {
             switch (item.getItemId()) {
                 case R.id.navigation_track:
-                    showReloadPlacesButton = false;
                     getSupportFragmentManager().beginTransaction().replace(
                             R.id.fragment_container,
                             TrackFragment.getInstance()
                     ).commit();
 
-                    invalidateOptionsMenu();
-                    return true;
-                case R.id.navigation_places:
-                    getSupportFragmentManager().beginTransaction().replace(
-                            R.id.fragment_container,
-                            PlaceFragment.getInstance()
-                    ).commit();
-
-                    showReloadPlacesButton = true;
                     invalidateOptionsMenu();
                     return true;
             }
@@ -86,22 +76,4 @@ public class MainActivity extends AppCompatActivity {
 
     };
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        if (showReloadPlacesButton) {
-            getMenuInflater().inflate(R.menu.main_menu, menu);
-            final MenuItem myActionMenuItem = menu.findItem(R.id.action_refresh);
-            myActionMenuItem.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
-                @Override
-                public boolean onMenuItemClick(MenuItem item) {
-                    PlaceFragment placeFragment = (PlaceFragment) getSupportFragmentManager().findFragmentById(R.id.fragment_container);
-                    if (placeFragment.isAdded()) {
-                        placeFragment.currentPlace();
-                    }
-                    return false;
-                }
-            });
-        }
-        return super.onCreateOptionsMenu(menu);
-    }
 }
