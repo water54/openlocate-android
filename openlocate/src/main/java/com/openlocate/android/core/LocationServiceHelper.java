@@ -257,20 +257,13 @@ final class LocationServiceHelper {
     public void onTaskRemoved(Intent rootIntent) {
         Log.d(TAG, "TASK REMOVED");
 
-        setRestartServiceAlarmManager();
         unschedulePeriodicTasks();
-    }
-
-    private void setRestartServiceAlarmManager() {
-        if (Build.VERSION.SDK_INT < 26 && restartServiceIntent != null && LocationService.isLocationEnabled(context)) {
-            PendingIntent pendingIntent = PendingIntent.getService(context, 0, restartServiceIntent, PendingIntent.FLAG_ONE_SHOT);
-            alarmManager.set(AlarmManager.ELAPSED_REALTIME_WAKEUP, SystemClock.elapsedRealtime() + Constants.SERVICE_CHECK_INTERVAL_MSEC, pendingIntent);
-        }
     }
 
     private void stopLocationUpdates() {
         if (googleApiClient != null && googleApiClient.isConnected() && locationListener != null) {
             LocationServices.FusedLocationApi.removeLocationUpdates(googleApiClient, locationListener);
+            googleApiClient.disconnect();
         }
         locationListener = null;
     }
@@ -303,7 +296,11 @@ final class LocationServiceHelper {
                 .setTag(LOCATION_DISPATCH_TAG)
                 .build();
 
-        networkManager.schedule(task);
+        if (networkManager != null) {
+            networkManager.schedule(task);
+        } else {
+            Log.w(TAG, "Network Manger is null");
+        }
     }
 
     private void unschedulePeriodicTasks() {
