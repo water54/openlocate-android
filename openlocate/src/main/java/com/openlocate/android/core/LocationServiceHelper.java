@@ -122,6 +122,8 @@ final class LocationServiceHelper {
         boolean success = setValues(intent);
 
         if (success == false) {
+            unschedulePeriodicTasks();
+            stopLocationUpdates();
             return false;
         }
 
@@ -182,22 +184,23 @@ final class LocationServiceHelper {
 
     @SuppressWarnings("unchecked")
     private boolean setValues(Intent intent) {
-        configuration = intent.getExtras().getParcelable(Constants.INTENT_CONFIGURATION);
+        OpenLocate.Configuration configuration = intent.getExtras().getParcelable(Constants.INTENT_CONFIGURATION);
+        ArrayList<OpenLocate.Endpoint> endpoints = intent.getParcelableArrayListExtra(Constants.ENDPOINTS_KEY);
+        String adId = intent.getStringExtra(Constants.ADVERTISING_ID_KEY);
 
-        endpoints = intent.getParcelableArrayListExtra(Constants.ENDPOINTS_KEY);
+        if (configuration == null || endpoints == null || adId == null) {
+            return false;
+        }
 
-        advertisingInfo = new AdvertisingIdClient.Info(
-                intent.getStringExtra(Constants.ADVERTISING_ID_KEY),
+        this.configuration = configuration;
+        this.endpoints = endpoints;
+        this.advertisingInfo = new AdvertisingIdClient.Info(adId,
                 intent.getBooleanExtra(Constants.LIMITED_AD_TRACKING_ENABLED_KEY, false)
         );
 
         setLocationRequestIntervalInSecs(intent);
         setTransmissionIntervalInSecs(intent);
         setLocationAccuracy(intent);
-
-        if (configuration == null || endpoints == null || advertisingInfo == null) {
-            return false;
-        }
 
         return true;
     }
@@ -274,7 +277,12 @@ final class LocationServiceHelper {
 
     private void scheduleDispatchLocationService() {
 
-        if(endpoints == null) {
+        if (endpoints == null) {
+            return;
+        }
+
+        if (networkManager == null) {
+            Log.w(TAG, "Network Manager is null");
             return;
         }
 
@@ -296,11 +304,7 @@ final class LocationServiceHelper {
                 .setTag(LOCATION_DISPATCH_TAG)
                 .build();
 
-        if (networkManager != null) {
-            networkManager.schedule(task);
-        } else {
-            Log.w(TAG, "Network Manger is null");
-        }
+        networkManager.schedule(task);
     }
 
     private void unschedulePeriodicTasks() {
@@ -338,6 +342,11 @@ final class LocationServiceHelper {
 
         @Override
         public void onLocationChanged(Location location) {
+
+            if (configuration == null) {
+                return;
+            }
+
             Log.v(TAG, location.toString());
 
             locations.add(

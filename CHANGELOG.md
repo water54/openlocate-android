@@ -2,6 +2,12 @@
 
 `OpenLocate-Android` adheres to [Semantic Versioning](http://semver.org/).
 
+## [1.1.7](https://github.com/OpenLocate/openlocate-ios/tag/1.1.7)
+
+#### Fixed
+
+- Fix crash related to null OpenLocate.Configuration if service was killed by user.
+
 ## [1.1.6](https://github.com/OpenLocate/openlocate-ios/tag/1.1.6)
 
 #### Fixed

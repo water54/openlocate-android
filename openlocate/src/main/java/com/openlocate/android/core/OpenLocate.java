@@ -488,6 +488,10 @@ public class OpenLocate implements OpenLocateLocationTracker {
     @Override
     public void startTracking(Activity activity)  {
 
+        if (configuration == null) {
+            return;
+        }
+
         int resultCode = isGooglePlayServicesAvailable();
         if (resultCode != ConnectionResult.SUCCESS) {
             GoogleApiAvailability.getInstance().getErrorDialog(activity, resultCode, PLAY_SERVICES_RESOLUTION_REQUEST).show();

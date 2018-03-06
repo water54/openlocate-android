@@ -32,6 +32,10 @@ final class InformationFieldsFactory {
 
     private InformationFieldsFactory(Context context, OpenLocate.Configuration configuration) {
 
+        if (configuration == null) {
+            return;
+        }
+
         this.configuration = configuration;
         this.context = context;
 
