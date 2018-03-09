@@ -44,6 +44,7 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.gcm.GcmNetworkManager;
 import com.google.android.gms.gcm.PeriodicTask;
 import com.google.android.gms.gcm.Task;
+import com.google.android.gms.location.FusedLocationProviderApi;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 
@@ -249,8 +250,11 @@ final class LocationServiceHelper {
         try {
             LocationRequest request = getLocationRequest();
             locationListener = new LocationListener();
-            LocationServices.FusedLocationApi.requestLocationUpdates(googleApiClient, request, locationListener);
-            schedulePeriodicTasks();
+            FusedLocationProviderApi fusedLocationApi = LocationServices.FusedLocationApi;
+            if (fusedLocationApi != null) {
+                fusedLocationApi.requestLocationUpdates(googleApiClient, request, locationListener);
+                schedulePeriodicTasks();
+            }
         } catch (SecurityException e) {
             locationListener = null;
             Log.e(TAG, e.getMessage());
@@ -265,8 +269,11 @@ final class LocationServiceHelper {
 
     private void stopLocationUpdates() {
         if (googleApiClient != null && googleApiClient.isConnected() && locationListener != null) {
-            LocationServices.FusedLocationApi.removeLocationUpdates(googleApiClient, locationListener);
-            googleApiClient.disconnect();
+            FusedLocationProviderApi fusedLocationApi = LocationServices.FusedLocationApi;
+            if (fusedLocationApi != null) {
+                fusedLocationApi.removeLocationUpdates(googleApiClient, locationListener);
+                googleApiClient.disconnect();
+            }
         }
         locationListener = null;
     }
