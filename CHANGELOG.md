@@ -2,6 +2,12 @@
 
 `OpenLocate-Android` adheres to [Semantic Versioning](http://semver.org/).
 
+## [1.1.9](https://github.com/OpenLocate/openlocate-ios/tag/1.1.9)
+
+#### Fixed
+
+- Fix crash related to Google Play Services not being up to date.
+
 ## [1.1.8](https://github.com/OpenLocate/openlocate-ios/tag/1.1.8)
 
 #### Fixed
