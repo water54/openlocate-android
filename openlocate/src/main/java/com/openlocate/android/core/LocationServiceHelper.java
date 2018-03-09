@@ -343,7 +343,8 @@ final class LocationServiceHelper {
         @Override
         public void onLocationChanged(Location location) {
 
-            if (configuration == null) {
+            if (configuration == null || locations == null ||
+                    context == null || advertisingInfo == null) {
                 return;
             }
 

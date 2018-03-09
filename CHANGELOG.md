@@ -2,6 +2,12 @@
 
 `OpenLocate-Android` adheres to [Semantic Versioning](http://semver.org/).
 
+## [1.1.8](https://github.com/OpenLocate/openlocate-ios/tag/1.1.8)
+
+#### Fixed
+
+- Fix possible crash related to Google Play Services calling location listener delegate after it has been removed.
+
 ## [1.1.7](https://github.com/OpenLocate/openlocate-ios/tag/1.1.7)
 
 #### Fixed
