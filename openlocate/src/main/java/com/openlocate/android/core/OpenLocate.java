@@ -471,7 +471,8 @@ public class OpenLocate implements OpenLocateLocationTracker {
 
         boolean trackingEnabled = SharedPreferenceUtils.getInstance(configuration.context).getBoolanValue(Constants.TRACKING_STATUS, false);
 
-        if (trackingEnabled && LocationService.hasLocationPermission(configuration.context)) {
+        if (trackingEnabled && LocationService.hasLocationPermission(configuration.context) &&
+                sharedInstance.isGooglePlayServicesAvailable() == ConnectionResult.SUCCESS) {
             sharedInstance.onPermissionsGranted();
         }
 

@@ -304,7 +304,12 @@ final class LocationServiceHelper {
                 .setTag(LOCATION_DISPATCH_TAG)
                 .build();
 
-        networkManager.schedule(task);
+        try {
+            networkManager.schedule(task);
+        } catch (IllegalArgumentException e) {
+            Log.e(TAG, "Google Play Services is not up to date.");
+            stopLocationUpdates();
+        }
     }
 
     private void unschedulePeriodicTasks() {
