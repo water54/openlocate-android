@@ -607,8 +607,12 @@ public class OpenLocate implements OpenLocateLocationTracker {
             updateAdvertisingInfo(intent, info.getId(), info.isLimitAdTrackingEnabled());
         }
 
-        context.startService(intent);
-        setStartedPreferences();
+        try {
+            context.startService(intent);
+            setStartedPreferences();
+        } catch (SecurityException e) {
+            Log.e(TAG, "Could not start location service");
+        }
     }
 
     private void setStartedPreferences() {

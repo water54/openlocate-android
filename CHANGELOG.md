@@ -2,6 +2,12 @@
 
 `OpenLocate-Android` adheres to [Semantic Versioning](http://semver.org/).
 
+## [1.1.10](https://github.com/OpenLocate/openlocate-ios/tag/1.1.10)
+
+#### Fixed
+
+- Fix crash related to Context.startService() throwing a security exception from some specific Android OEMs doing battery management
+
 ## [1.1.9](https://github.com/OpenLocate/openlocate-ios/tag/1.1.9)
 
 #### Fixed
