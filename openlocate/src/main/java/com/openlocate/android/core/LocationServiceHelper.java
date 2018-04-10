@@ -36,6 +36,7 @@ import android.os.Bundle;
 import android.os.SystemClock;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.annotation.RequiresApi;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
@@ -382,6 +383,7 @@ final class LocationServiceHelper {
         }
     }
 
+    @RequiresApi(26)
     private void startForeground() {
         Notification notification = new Notification.Builder(context).build();
         ((LocationService) context).startForeground(FOREGROUND_SERVICE_TAG, notification);
