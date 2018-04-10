@@ -30,6 +30,7 @@ import android.location.Location;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.support.annotation.NonNull;
+import android.support.annotation.RequiresApi;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
@@ -461,6 +462,7 @@ public class OpenLocate implements OpenLocateLocationTracker {
         editor.apply();
     }
 
+    @RequiresApi(19)
     public static OpenLocate initialize(Configuration configuration) {
 
         saveConfiguration(configuration);
@@ -479,6 +481,7 @@ public class OpenLocate implements OpenLocateLocationTracker {
         return sharedInstance;
     }
 
+    @RequiresApi(19)
     public static OpenLocate getInstance() throws IllegalStateException {
         if (sharedInstance == null) {
             throw new IllegalStateException("OpenLate SDK must be initialized using initialize method");
@@ -487,6 +490,7 @@ public class OpenLocate implements OpenLocateLocationTracker {
     }
 
     @Override
+    @RequiresApi(19)
     public void startTracking(Activity activity)  {
 
         if (configuration == null) {
@@ -669,8 +673,10 @@ public class OpenLocate implements OpenLocateLocationTracker {
     }
 
     @Override
+    @RequiresApi(19)
     public void stopTracking() {
         SharedPreferenceUtils.getInstance(context).setValue(Constants.TRACKING_STATUS, false);
+
         Intent intent = new Intent(context, LocationService.class);
         context.stopService(intent);
     }

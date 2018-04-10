@@ -16,7 +16,7 @@ ext {
     siteUrl = 'https://github.com/OpenLocate/openlocate-android'
     gitUrl = 'https://github.com/OpenLocate/openlocate-android.git'
 
-    libraryVersion = '1.1.11'
+    libraryVersion = '1.2.0'
 
     developerId = 'openlocate'
     developerName = 'OpenLocate'
@@ -43,7 +43,7 @@ android {
     }
 
     defaultConfig {
-        minSdkVersion 19
+        minSdkVersion 15
         targetSdkVersion 25
         versionCode 1
         versionName "1.0"
