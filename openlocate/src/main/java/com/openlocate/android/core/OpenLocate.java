@@ -616,6 +616,8 @@ public class OpenLocate implements OpenLocateLocationTracker {
             setStartedPreferences();
         } catch (SecurityException e) {
             Log.e(TAG, "Could not start location service");
+        } catch (IllegalStateException e1){
+            Log.e(TAG, "Not allowed to start location service");
         }
     }
 
