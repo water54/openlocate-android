@@ -173,6 +173,7 @@ public class OpenLocate implements OpenLocateLocationTracker {
 
             public Configuration build() {
                 if (serverUrl != null) {
+
                     Endpoint endpoint = new Endpoint(serverUrl, headers);
 
                     if (endpoints == null) {
@@ -343,7 +344,12 @@ public class OpenLocate implements OpenLocateLocationTracker {
 
         public Endpoint(String url, HashMap<String, String> headers) {
             this.url = url;
-            this.headers = headers;
+
+            if (headers == null) {
+                this.headers = new HashMap<>();
+            } else {
+                this.headers = headers;
+            }
         }
 
         private Endpoint(Builder builder) {
@@ -448,6 +454,10 @@ public class OpenLocate implements OpenLocateLocationTracker {
             this.endpoints = configuration.endpoints;
             this.configuration = configuration;
             setPreferences();
+    }
+
+    public int sendLocations(Context context) throws JSONException {
+        return DispatchLocationService.sendLocations(context);
     }
 
     private void setPreferences() {
