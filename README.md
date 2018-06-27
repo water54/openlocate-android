@@ -140,32 +140,6 @@ public class MyApplication extends Application {
 ```
 
 
-#### For example, to send data to SafeGraph:
-
-```java
-import android.app.Application;
-import com.openlocate.android.core.OpenLocate;
-
-public class MyApplication extends Application {
-
-    @Override
-    public void onCreate() {
-        super.onCreate();
-
-        String url = "https://api.safegraph.com/v1/provider/<UUID>/devicelocation"
-
-        HashMap<String, String> headers = new HashMap<>();
-        headers.put("Authorization", "Bearer <TOKEN>");
-
-        OpenLocate.Configuration config = new OpenLocate.Configuration.Builder(this, url)
-            .setHeaders(headers)
-            .build();
-
-        OpenLocate.initialize(config);
-    }
-}
-```
-
 ### Start tracking:
 Activity should be passed to method below. Library will request permission for you.
 
@@ -291,47 +265,8 @@ public void fetchGooglePlaces(OpenLocateLocation openLocateLocation, final SafeG
 
 ```
 
-#### For example, to query Safegraph Places API using location:
 
-SafeGraph Places API: https://partners.safegraph.com/places
-
-```java
-
-private Map<String, String> getQueryMap(OpenLocateLocation location) {
-        Map<String, String> queryMap = new HashMap<>();
-        queryMap.put("advertising_id", location.getAdvertisingInfo().getId());
-        queryMap.put("advertising_id_type", "aaid");
-        queryMap.put("latitude", String.valueOf(location.getLocation().getLatitude()));
-        queryMap.put("longitude", String.valueOf(location.getLocation().getLongitude()));
-        queryMap.put("horizontal_accuracy", String.valueOf(location.getLocation().getHorizontalAccuracy()));
-        return queryMap;
- }
-
- private void fetchNearbyPlaces() {
-    // These classes can be found in the example app in this repo
-     SafeGraphPlaceClient safeGraphPlaceClient = ClientGenerator.createClient(SafeGraphPlaceClient.class);
-     Call<SafeGraphPlaceBody> call = safeGraphPlaceClient.getAllPlaces(getQueryMap(openLocateLocation));
-
-     call.enqueue(new Callback<SafeGraphPlaceBody>() {
-         @Override
-         public void onResponse(Call<SafeGraphPlaceBody> call, Response<SafeGraphPlaceBody> response) {
-
-             if (response.isSuccessful()) {
-                 List<SafeGraphPlace> places = response.body().getPlaceList();
-                 //TODO Do something with places
-             }
-         }
-
-         @Override
-         public void onFailure(Call<SafeGraphPlaceBody> call, Throwable t) {
-             //error
-         }
-     });
- }
-
-```
-
-Similarly, OpenLocate SDK can be used to query additional APIs such as Facebook Places Graph or any other 3rd party places API.
+Similarly, OpenLocate can be used to query additional APIs such as Facebook Places Graph or any other 3rd party places API.
 
 - Facebook Places API - https://developers.facebook.com/docs/places/
 
