@@ -243,10 +243,10 @@ private Map<String, String> getQueryMapGoogle(OpenLocateLocation location ) {
         return queryMap;
 }
 
-public void fetchGooglePlaces(OpenLocateLocation openLocateLocation, final SafeGraphPlaceCallback callback) {
+public void fetchGooglePlaces(OpenLocateLocation openLocateLocation, final GooglePlaceCallback callback) {
 
-        GooglePlaceClient safeGraphPlaceClient = GooglePlaceClientGenerator.createClient(GooglePlaceClient.class);
-        Call<GooglePlaceBody> call=safeGraphPlaceClient.getNearByPlaces(getQueryMapGoogle(openLocateLocation));
+        GooglePlaceClient client = GooglePlaceClientGenerator.createClient(GooglePlaceClient.class);
+        Call<GooglePlaceBody> call= client.getNearByPlaces(getQueryMapGoogle(openLocateLocation));
 
         call.enqueue(new Callback<GooglePlaceBody>() {
             @Override

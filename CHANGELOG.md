@@ -2,6 +2,12 @@
 
 `OpenLocate-Android` adheres to [Semantic Versioning](http://semver.org/).
 
+## [1.2.1](https://github.com/OpenLocate/openlocate-ios/tag/1.2.1)
+
+#### Fixed
+
+- Fixed issue where periodic location data upload is reset when application is restarted
+
 ## [1.2.0](https://github.com/OpenLocate/openlocate-ios/tag/1.2.0)
 
 #### Added
