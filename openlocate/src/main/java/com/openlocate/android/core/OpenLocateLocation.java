@@ -116,7 +116,7 @@ public final class OpenLocateLocation implements JsonObjectType {
             location.setAltitude(json.getDouble(Keys.ALTITUDE));
             location.setCourse(Float.parseFloat(json.getString(Keys.COURSE)));
             location.setSpeed(Float.parseFloat(json.getString(Keys.SPEED)));
-            location.setHorizontalAccuracy(Float.parseFloat(json.getString(Keys.VERTICAL_ACCURACY)));
+            location.setVerticalAccuracy(Float.parseFloat(json.getString(Keys.VERTICAL_ACCURACY)));
 
             String deviceManufacturer = "";
             if (json.has(Keys.DEVICE_MANUFACTURER)) {
