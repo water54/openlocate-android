@@ -55,7 +55,7 @@ OpenLocate initialises a  background service alongside your application. This ba
 
 The location updates rely on Google Play Services' `Fused Location Provider`. The location collection interval is set at a default of 3 minutes. Actual  location updates received can be more frequent than this however, as OpenLocate will receive passive fixes (location updates triggered by other applications) if there are any.
 
-In order to minimize battery usage and network traffic to your server, the location updates are not transmitted immediately, but rather batched locally for sending at a defined interval. The default transmission interval is one hour. Once successfully transmitted, the location updates are no longer stored on the device.
+In order to minimize battery usage and network traffic to your server, the location updates are not transmitted immediately, but rather batched locally for sending at a defined interval. The default transmission interval is six hours. Once successfully transmitted, the location updates are no longer stored on the device.
 
 ## Installation
 
