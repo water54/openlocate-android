@@ -21,13 +21,19 @@
  */
 package com.openlocate.android.core;
 
+import android.content.Context;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.database.sqlite.SQLiteFullException;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.os.Build;
 import android.util.Log;
 
-import com.google.android.gms.gcm.GcmNetworkManager;
-import com.google.android.gms.gcm.GcmTaskService;
-import com.google.android.gms.gcm.TaskParams;
+import com.firebase.jobdispatcher.SimpleJobService;
+import com.openlocate.android.BuildConfig;
+import com.firebase.jobdispatcher.JobParameters;
+import com.firebase.jobdispatcher.JobService;
 
 import org.json.JSONException;
 
@@ -38,45 +44,66 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-final public class DispatchLocationService extends GcmTaskService {
+final public class DispatchLocationService extends SimpleJobService {
 
     private final static String TAG = DispatchLocationService.class.getSimpleName();
 
     public static final long EXPIRED_PERIOD = TimeUnit.DAYS.toMillis(10);
 
     @Override
-    public int onRunTask(TaskParams taskParams) {
-        SQLiteOpenHelper helper = DatabaseHelper.getInstance(this);
-        LocationDataSource dataSource = new LocationDatabase(helper);
-        HttpClient httpClient = new HttpClientImpl();
-
+    public int onRunJob(JobParameters job) {
         List<OpenLocate.Endpoint> endpoints = null;
         try {
-            endpoints = OpenLocate.Endpoint.fromJson(taskParams.getExtras().getString(Constants.ENDPOINTS_KEY));
+            endpoints = OpenLocate.Endpoint.fromJson(job.getExtras().getString(Constants.ENDPOINTS_KEY));
         } catch (JSONException e) {
             e.printStackTrace();
         }
 
-        LocationDispatcher dispatcher = new LocationDispatcher();
+        boolean isSuccess = false;
+        try {
+            isSuccess = sendLocations(this, endpoints);
+        }
+        catch (RuntimeException e) {
+            Log.e(TAG, "Could not persist ol updates.");
+        } finally {
+            if (isSuccess) {
+                return RESULT_SUCCESS;
+            }
+            return RESULT_FAIL_RETRY;
+        }
+    }
 
+    public static boolean sendLocations(Context context, List<OpenLocate.Endpoint> endpoints) {
+
+        boolean isSuccess = true;
+
+        SQLiteOpenHelper helper = DatabaseHelper.getInstance(context);
+        LocationDataSource dataSource = new LocationDatabase(helper);
+        HttpClient httpClient = new HttpClientImpl();
+
+        LocationDispatcher dispatcher = new LocationDispatcher();
+        String userAgent = getUserAgent(context);
         List<Long> timestamps = new ArrayList<>(endpoints.size());
         for (OpenLocate.Endpoint endpoint : endpoints) {
 
             String key = md5(endpoint.getUrl().toLowerCase());
 
             try {
-                long timestamp = SharedPreferenceUtils.getInstance(this).getLongValue(key, 0);
-                List<OpenLocateLocation> sentLocations = dispatcher.postLocations(httpClient, endpoint, timestamp, dataSource);
+                long timestamp = SharedPreferenceUtils.getInstance(context).getLongValue(key, 0);
+                List<OpenLocateLocation> sentLocations = dispatcher.postLocations(httpClient, endpoint, userAgent, timestamp, dataSource);
 
                 if (sentLocations != null && sentLocations.isEmpty() == false) {
-                    long latestCreatedLocationDate = sentLocations.get(sentLocations.size() - 1).getCreated().getTime();
-                    SharedPreferenceUtils.getInstance(this).setValue(key, latestCreatedLocationDate);
+                    long latestCreatedLocationDate =
+                            sentLocations.get(sentLocations.size() - 1).getCreated().getTime();
+                    SharedPreferenceUtils.getInstance(context).setValue(key, latestCreatedLocationDate);
+                } else if (sentLocations != null && sentLocations.isEmpty()) {
+                    isSuccess = false;
                 }
             } catch (Exception e) {
                 e.printStackTrace();
             }
 
-            timestamps.add(SharedPreferenceUtils.getInstance(this).getLongValue(key, 0));
+            timestamps.add(SharedPreferenceUtils.getInstance(context).getLongValue(key, 0));
         }
 
         Long min = Collections.min(timestamps);
@@ -94,13 +121,22 @@ final public class DispatchLocationService extends GcmTaskService {
             } finally {
                 dataSource.close();
             }
-
         }
 
-        return GcmNetworkManager.RESULT_SUCCESS;
+        return isSuccess;
     }
 
-    private String md5(String in) {
+    public static boolean sendLocations(Context context) throws JSONException {
+        return sendLocations(context, getEndpoints(context));
+    }
+
+    public static List<OpenLocate.Endpoint> getEndpoints(Context context) throws JSONException {
+        SharedPreferenceUtils preferences = SharedPreferenceUtils.getInstance(context);
+        String json = preferences.getStringValue(Constants.ENDPOINTS_KEY, "");
+        return OpenLocate.Endpoint.fromJson(json);
+    }
+
+    private static String md5(String in) {
         MessageDigest digest;
         try {
             digest = MessageDigest.getInstance("MD5");
@@ -121,4 +157,35 @@ final public class DispatchLocationService extends GcmTaskService {
         return in;
     }
 
+    private static String getUserAgent(Context context) {
+        String appName = getApplicationName(context);
+        String appVersion = "N/A";
+        int appVersionCode = 0;
+        String appPackageName;
+        String osVersion = android.os.Build.VERSION.RELEASE;
+        String deviceName = Build.MODEL;
+        String sdkVersion = BuildConfig.VERSION_NAME;
+
+        try {
+            PackageManager packageManager = context.getPackageManager();
+            appPackageName = context.getPackageName();
+            PackageInfo packageInfo = packageManager.getPackageInfo(appPackageName, 0);
+            if (packageInfo != null) {
+                appVersion = packageInfo.versionName;
+                appVersionCode = packageInfo.versionCode;
+            }
+        }
+        catch (PackageManager.NameNotFoundException e) {
+            return "OpenLocate";
+        }
+
+        return appName + "/" + appVersion + " (" + appPackageName + "; build:" + appVersionCode +
+                "; Android " + osVersion + "; " + deviceName + ") OpenLocate/" + sdkVersion;
+    }
+
+    public static String getApplicationName(Context context) {
+        ApplicationInfo applicationInfo = context.getApplicationInfo();
+        int stringId = applicationInfo.labelRes;
+        return stringId == 0 ? applicationInfo.nonLocalizedLabel.toString() : context.getString(stringId);
+    }
 }

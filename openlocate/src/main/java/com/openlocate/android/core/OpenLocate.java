@@ -24,66 +24,203 @@ package com.openlocate.android.core;
 import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
-import android.content.Intent;
-import android.content.SharedPreferences;
-import android.location.Location;
+import android.content.pm.PackageManager;
 import android.os.Parcel;
 import android.os.Parcelable;
-import android.support.annotation.NonNull;
+import android.provider.Settings;
 import android.support.annotation.RequiresApi;
 import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.LocalBroadcastManager;
+import android.support.v4.content.ContextCompat;
 import android.util.Log;
 
 import com.google.android.gms.ads.identifier.AdvertisingIdClient;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
-import com.google.android.gms.location.FusedLocationProviderClient;
-import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
-import com.openlocate.android.callbacks.OpenLocateLocationCallback;
 import com.openlocate.android.exceptions.InvalidConfigurationException;
-import com.openlocate.android.exceptions.LocationDisabledException;
-import com.openlocate.android.exceptions.LocationPermissionException;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 
-public class OpenLocate implements OpenLocateLocationTracker {
+public class OpenLocate {
 
+    private static final String TAG = OpenLocate.class.getSimpleName();
     private static final int LOCATION_PERMISSION_REQUEST = 1001;
-
     private static final int PLAY_SERVICES_RESOLUTION_REQUEST = 9000;
 
     private static OpenLocate sharedInstance = null;
-    private static final String TAG = OpenLocate.class.getSimpleName();
 
     private Context context;
-    private ArrayList<Endpoint> endpoints;
+    private OpenLocateHelper openLocateHelper;
+
     private Configuration configuration;
+    private AdvertisingIdClient.Info advertisingIdInfo;
 
-    private FusedLocationProviderClient fusedLocationProviderClient;
+    private OpenLocate(Configuration configuration) {
+        this.context = configuration.context;
+        this.openLocateHelper = new OpenLocateHelper(context, configuration);
+        this.configuration = configuration;
+    }
 
-    private long locationInterval = Constants.DEFAULT_LOCATION_INTERVAL_SEC;
-    private long transmissionInterval = Constants.DEFAULT_TRANSMISSION_INTERVAL_SEC;
-    private LocationAccuracy accuracy = Constants.DEFAULT_LOCATION_ACCURACY;
+    public static OpenLocate initialize(Configuration configuration) {
+
+        saveConfiguration(configuration);
+
+        if (sharedInstance == null) {
+            sharedInstance = new OpenLocate(configuration);
+        }
+
+        boolean trackingEnabled = SharedPreferenceUtils.getInstance(configuration.context).getBoolanValue(Constants.TRACKING_STATUS, false);
+
+        if (trackingEnabled && hasLocationPermission(configuration.context) &&
+                sharedInstance.isGooglePlayServicesAvailable() == ConnectionResult.SUCCESS) {
+            sharedInstance.onPermissionsGranted();
+        }
+
+        return sharedInstance;
+    }
+
+    public static OpenLocate getInstance() throws IllegalStateException {
+        if (sharedInstance == null) {
+            throw new IllegalStateException("OpenLate SDK must be initialized using initialize method first");
+        }
+        return sharedInstance;
+    }
+
+    public void startTracking(Activity activity) {
+
+        if (configuration == null) {
+            return;
+        }
+
+        int resultCode = isGooglePlayServicesAvailable();
+        if (resultCode != ConnectionResult.SUCCESS) {
+            if (activity != null) {
+                GoogleApiAvailability.getInstance().getErrorDialog(activity, resultCode, PLAY_SERVICES_RESOLUTION_REQUEST).show();
+            }
+            return;
+        }
+
+        SharedPreferenceUtils.getInstance(context).setValue(Constants.TRACKING_STATUS, true);
+
+        if (hasLocationPermission(context)) {
+            onPermissionsGranted();
+        } else if (activity != null) {
+            ActivityCompat.requestPermissions(
+                    activity,
+                    new String[]{Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION},
+                    LOCATION_PERMISSION_REQUEST);
+            startCheckingPermissionTask();
+        } else {
+            Log.w(TAG, "Location Permission has not been accepted or prompted.");
+        }
+    }
+
+    public void stopTracking() {
+        SharedPreferenceUtils.getInstance(context).setValue(Constants.TRACKING_STATUS, false);
+        openLocateHelper.stopTracking();
+    }
+
+    public void updateConfiguration(OpenLocate.Configuration configuration) {
+        saveConfiguration(configuration);
+        this.configuration = configuration;
+        this.openLocateHelper.updateConfiguration(configuration);
+    }
+
+    public boolean isTracking() {
+        return SharedPreferenceUtils.getInstance(context).getBoolanValue(Constants.TRACKING_STATUS, false);
+    }
+
+    protected OpenLocate.Configuration getConfiguration() {
+        return configuration;
+    }
+
+    protected AdvertisingIdClient.Info getAdvertisingIdInfo() {
+        return advertisingIdInfo;
+    }
+
+    private int isGooglePlayServicesAvailable() {
+        GoogleApiAvailability apiAvailability = GoogleApiAvailability.getInstance();
+        return apiAvailability.isGooglePlayServicesAvailable(context);
+    }
+
+    private void startCheckingPermissionTask() {
+        Timer timer = new Timer();
+        timer.scheduleAtFixedRate(new TimerTask() {
+            @Override
+            public void run() {
+                if (hasLocationPermission(context)) {
+                    onPermissionsGranted();
+                    this.cancel();
+                }
+
+            }
+        }, 5 * 1000, 5 * 1000);
+    }
+
+    private void onPermissionsGranted() {
+        FetchAdvertisingInfoTask task = new FetchAdvertisingInfoTask(context, new FetchAdvertisingInfoTaskCallback() {
+            @Override
+            public void onAdvertisingInfoTaskExecute(AdvertisingIdClient.Info info) {
+                advertisingIdInfo = info;
+                openLocateHelper.startTracking();
+            }
+        });
+        task.execute();
+    }
+
+    private static void saveConfiguration(Configuration configuration) throws InvalidConfigurationException {
+        if (configuration.endpoints.isEmpty()) {
+            String message = "Invalid configuration. Please configure a valid urls";
+
+            Log.e(TAG, message);
+
+            throw new InvalidConfigurationException(
+                    message
+            );
+        }
+
+        try {
+            String endpoins = Endpoint.toJson(configuration.endpoints);
+            SharedPreferenceUtils.getInstance(configuration.context).setValue(Constants.ENDPOINTS_KEY, endpoins);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static boolean isLocationEnabled(Context context) throws IllegalStateException {
+        try {
+            int locationMode = Settings.Secure.getInt(context.getContentResolver(), Settings.Secure.LOCATION_MODE);
+            return locationMode != Settings.Secure.LOCATION_MODE_OFF;
+        } catch (Settings.SettingNotFoundException exception) {
+            throw new IllegalStateException(exception);
+        }
+    }
+
+    private static boolean hasLocationPermission(Context context) {
+        return (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+                || ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED);
+    }
 
     public static final class Configuration implements Parcelable {
 
         Context context = null;
-        private ArrayList<Endpoint> endpoints;
+        private List<Endpoint> endpoints;
 
         private String serverUrl;
         private HashMap<String, String> headers;
+
+        private long transmissionInterval;
+        private long locationUpdateInterval;
+        private LocationAccuracy locationAccuracy;
 
         private boolean isWifiCollectionDisabled;
         private boolean isDeviceModelCollectionDisabled;
@@ -97,9 +234,15 @@ public class OpenLocate implements OpenLocateLocationTracker {
 
         public static final class Builder {
             private Context context;
-            private ArrayList<Endpoint> endpoints;
+
+            private List<Endpoint> endpoints;
             private String serverUrl;
             private HashMap<String, String> headers;
+
+            private long transmissionInterval = Constants.DEFAULT_TRANSMISSION_INTERVAL_SEC;
+            private long locationUpdateInterval = Constants.DEFAULT_LOCATION_INTERVAL_SEC;
+            private LocationAccuracy locationAccuracy = Constants.DEFAULT_LOCATION_ACCURACY;
+
             private boolean isWifiCollectionDisabled;
             private boolean isDeviceModelCollectionDisabled;
             private boolean isDeviceManufacturerCollectionDisabled;
@@ -110,14 +253,13 @@ public class OpenLocate implements OpenLocateLocationTracker {
             private boolean isLocationMethodCollectionDisabled;
             private boolean isLocationContextCollectionDisabled;
 
-            public Builder(Context context, ArrayList<Endpoint> endpoints) {
+            public Builder(Context context, List<Endpoint> endpoints) {
                 this.context = context.getApplicationContext();
                 this.endpoints = endpoints;
             }
 
             public Builder(Context context, String serverUrl) {
-                this.context = context.getApplicationContext();
-                this.serverUrl = serverUrl;
+                this(context, Arrays.asList(new Endpoint(serverUrl, null)));
             }
 
             public Builder setHeaders(HashMap<String, String> headers) {
@@ -125,6 +267,20 @@ public class OpenLocate implements OpenLocateLocationTracker {
                 return this;
             }
 
+            public Builder setTransmissionInterval(long seconds) {
+                this.transmissionInterval = seconds;
+                return this;
+            }
+
+            public Builder setLocationUpdateInterval(long seconds) {
+                this.locationUpdateInterval = seconds;
+                return this;
+            }
+
+            public Builder setLocationAccuracy(LocationAccuracy locationAccuracy) {
+                this.locationAccuracy = locationAccuracy;
+                return this;
+            }
 
             public Builder withoutWifiInfo() {
                 this.isWifiCollectionDisabled = true;
@@ -173,6 +329,7 @@ public class OpenLocate implements OpenLocateLocationTracker {
 
             public Configuration build() {
                 if (serverUrl != null) {
+
                     Endpoint endpoint = new Endpoint(serverUrl, headers);
 
                     if (endpoints == null) {
@@ -181,7 +338,6 @@ public class OpenLocate implements OpenLocateLocationTracker {
 
                     endpoints.add(endpoint);
                 }
-
                 return new Configuration(this);
             }
         }
@@ -189,6 +345,9 @@ public class OpenLocate implements OpenLocateLocationTracker {
         private Configuration(Builder builder) {
             this.context = builder.context;
             this.endpoints = builder.endpoints;
+            this.transmissionInterval = builder.transmissionInterval;
+            this.locationUpdateInterval = builder.locationUpdateInterval;
+            this.locationAccuracy = builder.locationAccuracy;
             this.isCarrierNameCollectionDisabled = builder.isCarrierNameCollectionDisabled;
             this.isChargingInfoCollectionDisabled = builder.isChargingInfoCollectionDisabled;
             this.isConnectionTypeCollectionDisabled = builder.isConnectionTypeCollectionDisabled;
@@ -202,6 +361,18 @@ public class OpenLocate implements OpenLocateLocationTracker {
 
         public List<Endpoint> getEndpoints() {
             return endpoints;
+        }
+
+        public long getTransmissionInterval() {
+            return transmissionInterval;
+        }
+
+        public long getLocationUpdateInterval() {
+            return locationUpdateInterval;
+        }
+
+        public LocationAccuracy getLocationAccuracy() {
+            return locationAccuracy;
         }
 
         public boolean isWifiCollectionDisabled() {
@@ -248,6 +419,11 @@ public class OpenLocate implements OpenLocateLocationTracker {
         @Override
         public void writeToParcel(Parcel dest, int flags) {
             dest.writeTypedList(this.endpoints);
+            dest.writeString(this.serverUrl);
+            dest.writeSerializable(this.headers);
+            dest.writeLong(this.transmissionInterval);
+            dest.writeLong(this.locationUpdateInterval);
+            dest.writeInt(this.locationAccuracy == null ? -1 : this.locationAccuracy.ordinal());
             dest.writeByte(this.isWifiCollectionDisabled ? (byte) 1 : (byte) 0);
             dest.writeByte(this.isDeviceModelCollectionDisabled ? (byte) 1 : (byte) 0);
             dest.writeByte(this.isDeviceManufacturerCollectionDisabled ? (byte) 1 : (byte) 0);
@@ -261,6 +437,12 @@ public class OpenLocate implements OpenLocateLocationTracker {
 
         protected Configuration(Parcel in) {
             this.endpoints = in.createTypedArrayList(Endpoint.CREATOR);
+            this.serverUrl = in.readString();
+            this.headers = (HashMap<String, String>) in.readSerializable();
+            this.transmissionInterval = in.readLong();
+            this.locationUpdateInterval = in.readLong();
+            int tmpLocationAccuracy = in.readInt();
+            this.locationAccuracy = tmpLocationAccuracy == -1 ? null : LocationAccuracy.values()[tmpLocationAccuracy];
             this.isWifiCollectionDisabled = in.readByte() != 0;
             this.isDeviceModelCollectionDisabled = in.readByte() != 0;
             this.isDeviceManufacturerCollectionDisabled = in.readByte() != 0;
@@ -284,7 +466,6 @@ public class OpenLocate implements OpenLocateLocationTracker {
             }
         };
     }
-
 
     public static class Endpoint implements Parcelable {
 
@@ -343,7 +524,12 @@ public class OpenLocate implements OpenLocateLocationTracker {
 
         public Endpoint(String url, HashMap<String, String> headers) {
             this.url = url;
-            this.headers = headers;
+
+            if (headers == null) {
+                this.headers = new HashMap<>();
+            } else {
+                this.headers = headers;
+            }
         }
 
         private Endpoint(Builder builder) {
@@ -383,7 +569,7 @@ public class OpenLocate implements OpenLocateLocationTracker {
                 return this;
             }
 
-              public Builder withHeaders(Map<String, String> headers) {
+            public Builder withHeaders(Map<String, String> headers) {
 
                 if (this.headers == null) {
                     this.headers = new HashMap<>();
@@ -439,297 +625,7 @@ public class OpenLocate implements OpenLocateLocationTracker {
 
         @Override
         public String toString() {
-            return "{url:" + url+"}";
+            return "{url:" + url + "}";
         }
-    }
-
-    private OpenLocate(Configuration configuration) {
-            this.context = configuration.context;
-            this.endpoints = configuration.endpoints;
-            this.configuration = configuration;
-            setPreferences();
-    }
-
-    private void setPreferences() {
-        SharedPreferences preferences = context.getSharedPreferences(Constants.OPENLOCATE, Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = preferences.edit();
-        try {
-            editor.putString(Constants.ENDPOINTS_KEY, Endpoint.toJson(configuration.getEndpoints()));
-
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-        editor.apply();
-    }
-
-    @RequiresApi(19)
-    public static OpenLocate initialize(Configuration configuration) {
-
-        saveConfiguration(configuration);
-
-        if (sharedInstance == null) {
-            sharedInstance = new OpenLocate(configuration);
-        }
-
-        boolean trackingEnabled = SharedPreferenceUtils.getInstance(configuration.context).getBoolanValue(Constants.TRACKING_STATUS, false);
-
-        if (trackingEnabled && LocationService.hasLocationPermission(configuration.context) &&
-                sharedInstance.isGooglePlayServicesAvailable() == ConnectionResult.SUCCESS) {
-            sharedInstance.onPermissionsGranted();
-        }
-
-        return sharedInstance;
-    }
-
-    @RequiresApi(19)
-    public static OpenLocate getInstance() throws IllegalStateException {
-        if (sharedInstance == null) {
-            throw new IllegalStateException("OpenLate SDK must be initialized using initialize method");
-        }
-        return sharedInstance;
-    }
-
-    @Override
-    @RequiresApi(19)
-    public void startTracking(Activity activity)  {
-
-        if (configuration == null) {
-            return;
-        }
-
-        int resultCode = isGooglePlayServicesAvailable();
-        if (resultCode != ConnectionResult.SUCCESS) {
-            GoogleApiAvailability.getInstance().getErrorDialog(activity, resultCode, PLAY_SERVICES_RESOLUTION_REQUEST).show();
-            return;
-        }
-
-        SharedPreferenceUtils.getInstance(context).setValue(Constants.TRACKING_STATUS, true);
-
-        if (LocationService.hasLocationPermission(context)) {
-            onPermissionsGranted();
-        } else if (activity != null) {
-            ActivityCompat.requestPermissions(
-                    activity,
-                    new String[]{Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION},
-                    LOCATION_PERMISSION_REQUEST);
-            startCheckingPermissionTask();
-        } else {
-            Log.w(TAG, "Location Permission has not been accepted or prompted.");
-        }
-    }
-
-    private int isGooglePlayServicesAvailable() {
-        GoogleApiAvailability apiAvailability = GoogleApiAvailability.getInstance();
-        return apiAvailability.isGooglePlayServicesAvailable(context);
-    }
-
-    void startCheckingPermissionTask() {
-
-        Timer timer = new Timer();
-        timer.scheduleAtFixedRate(new TimerTask() {
-            @Override
-            public void run() {
-
-                if (LocationService.hasLocationPermission(context)) {
-                    onPermissionsGranted();
-                    this.cancel();
-                }
-
-            }
-        }, 5 * 1000, 5 * 1000);
-
-    }
-
-    void onPermissionsGranted() {
-
-        FetchAdvertisingInfoTask task = new FetchAdvertisingInfoTask(context, new FetchAdvertisingInfoTaskCallback() {
-            @Override
-            public void onAdvertisingInfoTaskExecute(AdvertisingIdClient.Info info) {
-                onFetchAdvertisingInfo(info);
-            }
-        });
-        task.execute();
-    }
-
-
-    @Override
-    public void getCurrentLocation(final OpenLocateLocationCallback callback) throws LocationDisabledException, LocationPermissionException {
-        validateLocationEnabled();
-
-        fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(context);
-        try {
-            fusedLocationProviderClient.getLastLocation()
-                    .addOnSuccessListener(new OnSuccessListener<Location>() {
-                        @Override
-                        public void onSuccess(final Location location) {
-                            if (location == null) {
-                                callback.onError(new Error("Location cannot be fetched right now."));
-                            }
-
-                            onFetchCurrentLocation(location, callback);
-                        }
-                    })
-                    .addOnFailureListener(new OnFailureListener() {
-                        @Override
-                        public void onFailure(@NonNull Exception e) {
-                            callback.onError(new Error(e.getMessage()));
-                        }
-                    });
-        } catch (SecurityException e) {
-            throw new LocationPermissionException(
-                    "Location permission is denied. Please enable location permission."
-            );
-        }
-    }
-
-    private void onFetchCurrentLocation(final Location location, final OpenLocateLocationCallback callback) {
-        FetchAdvertisingInfoTask task = new FetchAdvertisingInfoTask(context, new FetchAdvertisingInfoTaskCallback() {
-            @Override
-            public void onAdvertisingInfoTaskExecute(AdvertisingIdClient.Info info) {
-
-                callback.onLocationFetch(
-                        OpenLocateLocation.from(
-                                location,
-                                info,
-                                InformationFieldsFactory.collectInformationFields(context, configuration)
-                        )
-                );
-            }
-        });
-        task.execute();
-    }
-
-    private void onFetchAdvertisingInfo(AdvertisingIdClient.Info info) {
-        Intent intent = new Intent(context, LocationService.class);
-
-        intent.putParcelableArrayListExtra(Constants.ENDPOINTS_KEY, endpoints);
-
-        updateLocationConfigurationInfo(intent);
-        updateFieldsConfigurationInfo(intent);
-
-        if (info != null) {
-            updateAdvertisingInfo(intent, info.getId(), info.isLimitAdTrackingEnabled());
-        }
-
-        try {
-            context.startService(intent);
-            setStartedPreferences();
-        } catch (SecurityException e) {
-            Log.e(TAG, "Could not start location service");
-        } catch (IllegalStateException e1){
-            Log.e(TAG, "Not allowed to start location service");
-        }
-    }
-
-    private void setStartedPreferences() {
-        SharedPreferences preferences = context.getSharedPreferences(Constants.OPENLOCATE, Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = preferences.edit();
-        editor.putBoolean(Constants.IS_SERVICE_STARTED, true);
-        editor.apply();
-    }
-
-    private void updateFieldsConfigurationInfo(Intent intent) {
-       intent.putExtra(Constants.INTENT_CONFIGURATION,configuration);
-    }
-
-    private void updateAdvertisingInfo(Intent intent, String advertisingId, boolean isLimitedAdTrackingEnabled) {
-        intent.putExtra(Constants.ADVERTISING_ID_KEY, advertisingId);
-        intent.putExtra(Constants.LIMITED_AD_TRACKING_ENABLED_KEY, isLimitedAdTrackingEnabled);
-    }
-
-    private void updateLocationConfigurationInfo(Intent intent) {
-        intent.putExtra(Constants.LOCATION_ACCURACY_KEY, accuracy);
-        intent.putExtra(Constants.LOCATION_INTERVAL_KEY, locationInterval);
-        intent.putExtra(Constants.TRANSMISSION_INTERVAL_KEY, transmissionInterval);
-    }
-
-    private static void saveConfiguration(Configuration configuration) throws InvalidConfigurationException {
-        if (configuration.endpoints.isEmpty()) {
-            String message = "Invalid configuration. Please configure a valid urls";
-
-            Log.e(TAG, message);
-            throw new InvalidConfigurationException(
-                    message
-            );
-        }
-
-        try {
-            String endpoins = Endpoint.toJson(configuration.endpoints);
-            SharedPreferenceUtils.getInstance(configuration.context).setValue(Constants.ENDPOINTS_KEY, endpoins);
-
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-
-    }
-
-    private void validateLocationEnabled() throws LocationDisabledException {
-        if (!LocationService.isLocationEnabled(context)) {
-            String message = "Location is switched off in the settings. Please enable it before continuing.";
-
-            Log.e(TAG, message);
-            throw new LocationDisabledException(
-                    message
-            );
-        }
-    }
-
-    @Override
-    @RequiresApi(19)
-    public void stopTracking() {
-        SharedPreferenceUtils.getInstance(context).setValue(Constants.TRACKING_STATUS, false);
-
-        Intent intent = new Intent(context, LocationService.class);
-        context.stopService(intent);
-    }
-
-    @Override
-    public boolean isTracking() {
-        return SharedPreferenceUtils.getInstance(context).getBoolanValue(Constants.TRACKING_STATUS, false);
-    }
-
-    public long getLocationInterval() {
-        return locationInterval;
-    }
-
-    public void setLocationInterval(long locationInterval) {
-        this.locationInterval = locationInterval;
-        broadcastLocationIntervalChanged();
-    }
-
-    public long getTransmissionInterval() {
-        return transmissionInterval;
-    }
-
-    public void setTransmissionInterval(long transmissionInterval) {
-        this.transmissionInterval = transmissionInterval;
-        broadcastTransmissionIntervalChanged();
-    }
-
-    public LocationAccuracy getAccuracy() {
-        return accuracy;
-    }
-
-    public void setAccuracy(LocationAccuracy accuracy) {
-        this.accuracy = accuracy;
-        broadcastLocationAccuracyChanged();
-    }
-
-    private void broadcastLocationIntervalChanged() {
-        Intent intent = new Intent(Constants.LOCATION_INTERVAL_CHANGED);
-        intent.putExtra(Constants.LOCATION_INTERVAL_KEY, locationInterval);
-        LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
-    }
-
-    private void broadcastTransmissionIntervalChanged() {
-        Intent intent = new Intent(Constants.TRANSMISSION_INTERVAL_CHANGED);
-        intent.putExtra(Constants.TRANSMISSION_INTERVAL_KEY, transmissionInterval);
-        LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
-    }
-
-    private void broadcastLocationAccuracyChanged() {
-        Intent intent = new Intent(Constants.LOCATION_ACCURACY_CHANGED);
-        intent.putExtra(Constants.LOCATION_ACCURACY_KEY, accuracy);
-        LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
     }
 }

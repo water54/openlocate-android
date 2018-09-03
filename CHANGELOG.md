@@ -2,6 +2,17 @@
 
 `OpenLocate-Android` adheres to [Semantic Versioning](http://semver.org/).
 
+## [2.0.0-rc-1](https://github.com/OpenLocate/openlocate-ios/tag/2.0.0-rc-1)
+
+#### Added
+
+- Android O Support without a foreground notification
+- Added OpenLocate specific User-Agent for http requests
+- Removed deprected GCM Library
+- Upgrade to API 26 as compile version. (#90)
+- Ability to force send current data collected. (#90)
+- Data now includes vertical accuracy (altitude accuracy)
+
 ## [1.2.1](https://github.com/OpenLocate/openlocate-ios/tag/1.2.1)
 
 #### Fixed
