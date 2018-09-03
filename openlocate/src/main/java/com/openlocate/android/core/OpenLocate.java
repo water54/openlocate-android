@@ -196,15 +196,6 @@ public class OpenLocate {
         }
     }
 
-    private static boolean isLocationEnabled(Context context) throws IllegalStateException {
-        try {
-            int locationMode = Settings.Secure.getInt(context.getContentResolver(), Settings.Secure.LOCATION_MODE);
-            return locationMode != Settings.Secure.LOCATION_MODE_OFF;
-        } catch (Settings.SettingNotFoundException exception) {
-            throw new IllegalStateException(exception);
-        }
-    }
-
     private static boolean hasLocationPermission(Context context) {
         return (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
                 || ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED);
