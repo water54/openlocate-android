@@ -2,6 +2,13 @@
 
 `OpenLocate-Android` adheres to [Semantic Versioning](http://semver.org/).
 
+## [2.0.0-rc-2](https://github.com/OpenLocate/openlocate-ios/tag/2.0.0-rc-2)
+
+#### Fixed
+
+- Fixed issue where `setHeaders(...)` on `OpenLocate.Configuration.Builder` did not set the header correctly.
+
+
 ## [2.0.0-rc-1](https://github.com/OpenLocate/openlocate-ios/tag/2.0.0-rc-1)
 
 #### Added
