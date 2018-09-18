@@ -250,7 +250,8 @@ public class OpenLocate {
             }
 
             public Builder(Context context, String serverUrl) {
-                this(context, Arrays.asList(new Endpoint(serverUrl, null)));
+                this.context = context.getApplicationContext();
+                this.serverUrl = serverUrl;
             }
 
             public Builder setHeaders(HashMap<String, String> headers) {
