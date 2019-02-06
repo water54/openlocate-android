@@ -2,6 +2,12 @@
 
 `OpenLocate-Android` adheres to [Semantic Versioning](http://semver.org/).
 
+## [2.0.0](https://github.com/OpenLocate/openlocate-ios/tag/2.0.0)
+
+#### Added
+
+- Final 2.0.0 Release.
+
 ## [2.0.0-rc-2](https://github.com/OpenLocate/openlocate-ios/tag/2.0.0-rc-2)
 
 #### Fixed
