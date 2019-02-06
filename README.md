@@ -75,7 +75,7 @@ Add the below line to your app's `build.gradle` inside the `dependencies` sectio
 
 Latested public release
 ```groovy
-compile 'com.openlocate:openlocate:2.+'
+implementation 'com.openlocate:openlocate:2.+'
 ```
 
 ## Usage
