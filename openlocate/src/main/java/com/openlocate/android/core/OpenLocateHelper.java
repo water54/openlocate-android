@@ -13,7 +13,6 @@ import com.firebase.jobdispatcher.FirebaseJobDispatcher;
 import com.firebase.jobdispatcher.GooglePlayDriver;
 import com.firebase.jobdispatcher.Job;
 import com.firebase.jobdispatcher.Lifetime;
-import com.firebase.jobdispatcher.RetryStrategy;
 import com.firebase.jobdispatcher.Trigger;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -105,7 +104,7 @@ final class OpenLocateHelper implements GoogleApiClient.ConnectionCallbacks,
         mLocationRequest = new LocationRequest();
         mLocationRequest.setInterval(locationUpdateInterval);
         mLocationRequest.setFastestInterval(locationUpdateInterval / 2);
-        mLocationRequest.setMaxWaitTime(Math.max(locationUpdateInterval * 2, (int)(locationTransmissionInterval * 0.85 / 3)));
+        mLocationRequest.setMaxWaitTime(Math.max(locationUpdateInterval * 2, (int) (locationTransmissionInterval * 0.85 / 3)));
         mLocationRequest.setPriority(locationAccuracy);
     }
 
@@ -148,7 +147,7 @@ final class OpenLocateHelper implements GoogleApiClient.ConnectionCallbacks,
         long transmissionIntervalInSecs = configuration.getTransmissionInterval();
 
         int initialBackoff = 600;
-        int maximumBackoff = Math.max((int)transmissionIntervalInSecs / 2, 3600);
+        int maximumBackoff = Math.max((int) transmissionIntervalInSecs / 2, 3600);
 
         Job job = jobDispatcher.newJobBuilder()
                 .setService(DispatchLocationService.class)
@@ -156,7 +155,7 @@ final class OpenLocateHelper implements GoogleApiClient.ConnectionCallbacks,
                 .setRecurring(true)
                 .setLifetime(Lifetime.FOREVER)
                 .setConstraints(Constraint.ON_ANY_NETWORK)
-                .setTrigger(Trigger.executionWindow((int)(transmissionIntervalInSecs * 0.9), (int)(transmissionIntervalInSecs * 1.1)))
+                .setTrigger(Trigger.executionWindow(90, (int) (transmissionIntervalInSecs * 1.1)))
                 .setReplaceCurrent(false)
                 .setRetryStrategy(jobDispatcher.newRetryStrategy(RETRY_POLICY_EXPONENTIAL, initialBackoff, maximumBackoff))
                 .setExtras(bundle)

@@ -21,18 +21,7 @@ repositories {
     maven { url 'https://maven.fabric.io/public' }
 }
 
-Properties properties = new Properties()
-def safegraphToken
-def safegraphProviderId
 
-if (project.file('local.properties').canRead()) {
-    properties.load(new FileInputStream(project.file('local.properties')))
-    safegraphToken = properties.getProperty('safegraph.token').trim()
-    safegraphProviderId = properties.getProperty('safegraph.providerId').trim()
-
-} else {
-    throw new GradleException("Could not read local.properties!")
-}
 
 android {
     compileSdkVersion 26
@@ -48,16 +37,18 @@ android {
     }
 
     buildTypes {
+        def safegraphToken = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE2NjY2NTI4NzUsImlhdCI6MTUwODk3Mjg3NSwic2NvcGUiOiJpbmdlc3Q6NjczOWE5YWQtMzAzNi00ZjQzLTg3NDMtNjU4MTU0M2MzYTFmIiwicHJvdmlkZXJfaWQiOiI2NzM5YTlhZC0zMDM2LTRmNDMtODc0My02NTgxNTQzYzNhMWYifQ.49ZUVlniQh_IzzpOv_5J0_Y1YdlNsBIIUxm2ROAwgqU"
+        def safegraphProviderId = "6739a9ad-3036-4f43-8743-6581543c3a1f"
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-            buildConfigField 'String', 'TOKEN', "\""+ safegraphToken + "\""
-            buildConfigField 'String', 'UUID', "\"" + safegraphProviderId + "\""
+            buildConfigField 'String', 'TOKEN', "\"" + safegraphToken +"\""
+            buildConfigField 'String', 'UUID', "\"" +safegraphProviderId+"\""
             buildConfigField 'String', 'URL', "\"https://api.safegraph.com/v1/provider/" + safegraphProviderId + "/devicelocation\""
         }
 
         debug {
-            buildConfigField 'String', 'TOKEN', "\""+ safegraphToken + "\""
+            buildConfigField 'String', 'TOKEN', "\"" + safegraphToken + "\""
             buildConfigField 'String', 'UUID', "\"" + safegraphProviderId + "\""
             buildConfigField 'String', 'URL', "\"https://api.safegraph.com/v1/provider/" + safegraphProviderId + "/devicelocation\""
 
