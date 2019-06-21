@@ -155,7 +155,7 @@ final class OpenLocateHelper implements GoogleApiClient.ConnectionCallbacks,
                 .setRecurring(true)
                 .setLifetime(Lifetime.FOREVER)
                 .setConstraints(Constraint.ON_ANY_NETWORK)
-                .setTrigger(Trigger.executionWindow(90, (int) (transmissionIntervalInSecs * 1.1)))
+                .setTrigger(Trigger.executionWindow((int) (transmissionIntervalInSecs * 0.9), (int) (transmissionIntervalInSecs * 1.1)))
                 .setReplaceCurrent(false)
                 .setRetryStrategy(jobDispatcher.newRetryStrategy(RETRY_POLICY_EXPONENTIAL, initialBackoff, maximumBackoff))
                 .setExtras(bundle)

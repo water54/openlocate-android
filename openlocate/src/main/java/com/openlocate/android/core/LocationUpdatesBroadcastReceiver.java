@@ -43,7 +43,7 @@ public class LocationUpdatesBroadcastReceiver extends BroadcastReceiver {
             if (action.contains(ACTION_PROCESS_UPDATES)) {
                 LocationResult locationResult = LocationResult.extractResult(intent);
                 if (locationResult != null) {
-                    new PersistLocationUpdatesTask(goAsync(), context, locationResult).execute();
+                    new PersistLocationUpdatesTask(goAsync(), context, locationResult).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
                 }
             }
         }
