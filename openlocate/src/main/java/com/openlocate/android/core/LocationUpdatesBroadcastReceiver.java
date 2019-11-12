@@ -43,7 +43,7 @@ public class LocationUpdatesBroadcastReceiver extends BroadcastReceiver {
             if (action.contains(ACTION_PROCESS_UPDATES)) {
                 LocationResult locationResult = LocationResult.extractResult(intent);
                 if (locationResult != null) {
-                    new PersistLocationUpdatesTask(goAsync(), context, locationResult).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+                    new PersistLocationUpdatesTask(/*goAsync(),*/ context.getApplicationContext(), locationResult).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
                 }
             }
         }
@@ -51,12 +51,12 @@ public class LocationUpdatesBroadcastReceiver extends BroadcastReceiver {
 
     private static class PersistLocationUpdatesTask extends AsyncTask<Void, Void, Boolean> {
 
-        private PendingResult pendingResult;
+        //        private PendingResult pendingResult;
         private WeakReference<Context> context;
         private LocationResult locationResult;
 
-        PersistLocationUpdatesTask(PendingResult pendingResult, Context context, LocationResult locationResult) {
-            this.pendingResult = pendingResult;
+        PersistLocationUpdatesTask(/*PendingResult pendingResult, */Context context, LocationResult locationResult) {
+//            this.pendingResult = pendingResult;
             this.context = new WeakReference<>(context);
             this.locationResult = locationResult;
         }
@@ -86,12 +86,12 @@ public class LocationUpdatesBroadcastReceiver extends BroadcastReceiver {
             return true;
         }
 
-        @Override
+/*        @Override
         protected void onPostExecute(Boolean result) {
             if (pendingResult != null) {
                 pendingResult.finish();
             }
-        }
+        }*/
 
         private void processLocations(List<Location> locations, Context context,
                                       OpenLocate.Configuration configuration,
@@ -101,7 +101,7 @@ public class LocationUpdatesBroadcastReceiver extends BroadcastReceiver {
             try {
                 for (Location location : locations) {
 
-                    Log.v(TAG, location.toString());
+//                    Log.v(TAG, location.toString());
 
                     OpenLocateLocation olLocation = OpenLocateLocation.from(
                             location,
