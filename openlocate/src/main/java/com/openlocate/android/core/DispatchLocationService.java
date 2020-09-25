@@ -30,10 +30,11 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.os.Build;
 import android.util.Log;
 
-import com.firebase.jobdispatcher.SimpleJobService;
+import androidx.annotation.NonNull;
+import androidx.work.Worker;
+import androidx.work.WorkerParameters;
+
 import com.openlocate.android.BuildConfig;
-import com.firebase.jobdispatcher.JobParameters;
-import com.firebase.jobdispatcher.JobService;
 
 import org.json.JSONException;
 
@@ -44,34 +45,18 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-final public class DispatchLocationService extends SimpleJobService {
-
+final public class DispatchLocationService extends Worker {
+    private Context context;
     private final static String TAG = DispatchLocationService.class.getSimpleName();
 
     public static final long EXPIRED_PERIOD = TimeUnit.DAYS.toMillis(10);
 
-    @Override
-    public int onRunJob(JobParameters job) {
-        List<OpenLocate.Endpoint> endpoints = null;
-        try {
-            endpoints = OpenLocate.Endpoint.fromJson(job.getExtras().getString(Constants.ENDPOINTS_KEY));
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
+    public DispatchLocationService(@NonNull Context context, @NonNull WorkerParameters workerParams) {
+        super(context, workerParams);
+        this.context = context;
 
-        boolean isSuccess = false;
-        try {
-            isSuccess = sendLocations(this, endpoints);
-        }
-        catch (RuntimeException e) {
-            Log.e(TAG, "Could not persist ol updates.");
-        } finally {
-            if (isSuccess) {
-                return RESULT_SUCCESS;
-            }
-            return RESULT_FAIL_RETRY;
-        }
     }
+
 
     public static boolean sendLocations(Context context, List<OpenLocate.Endpoint> endpoints) {
 
@@ -92,7 +77,7 @@ final public class DispatchLocationService extends SimpleJobService {
                 long timestamp = SharedPreferenceUtils.getInstance(context).getLongValue(key, 0);
                 List<OpenLocateLocation> sentLocations = dispatcher.postLocations(httpClient, endpoint, userAgent, timestamp, dataSource);
 
-                if (sentLocations != null && sentLocations.isEmpty() == false) {
+                if (sentLocations != null && !sentLocations.isEmpty()) {
                     long latestCreatedLocationDate =
                             sentLocations.get(sentLocations.size() - 1).getCreated().getTime();
                     SharedPreferenceUtils.getInstance(context).setValue(key, latestCreatedLocationDate);
@@ -174,8 +159,7 @@ final public class DispatchLocationService extends SimpleJobService {
                 appVersion = packageInfo.versionName;
                 appVersionCode = packageInfo.versionCode;
             }
-        }
-        catch (PackageManager.NameNotFoundException e) {
+        } catch (PackageManager.NameNotFoundException e) {
             return "OpenLocate";
         }
 
@@ -188,4 +172,40 @@ final public class DispatchLocationService extends SimpleJobService {
         int stringId = applicationInfo.labelRes;
         return stringId == 0 ? applicationInfo.nonLocalizedLabel.toString() : context.getString(stringId);
     }
+
+    @NonNull
+    @Override
+    public Result doWork() {
+        try {
+            sendLocations(context);
+            return Result.success();
+        } catch (JSONException e) {
+            e.printStackTrace();
+            return Result.retry();
+        }
+
+
+    }
+
+
+/*    public int onRunJob(JobParameters job) {
+        List<OpenLocate.Endpoint> endpoints = null;
+        try {
+            endpoints = OpenLocate.Endpoint.fromJson(job.getExtras().getString(Constants.ENDPOINTS_KEY));
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        boolean isSuccess = false;
+        try {
+            isSuccess = sendLocations(this, endpoints);
+        } catch (RuntimeException e) {
+            Log.e(TAG, "Could not persist ol updates.");
+        } finally {
+            if (isSuccess) {
+                return RESULT_SUCCESS;
+            }
+            return RESULT_FAIL_RETRY;
+        }
+    }*/
 }

@@ -25,19 +25,17 @@ package com.openlocate.example.fragments;
 import android.app.Activity;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
-import android.os.Build;
 import android.os.Bundle;
-import android.support.annotation.Nullable;
-import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
-import android.widget.Toast;
+
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
 
 import com.openlocate.android.core.OpenLocate;
-import com.openlocate.example.BuildConfig;
 import com.openlocate.example.R;
 import com.openlocate.example.activities.MainActivity;
 

@@ -21,8 +21,9 @@
  */
 package com.openlocate.android.core;
 
+import android.util.Log;
+
 import java.util.Map;
-import java.util.concurrent.ExecutionException;
 
 final class HttpClientImpl implements HttpClient {
 
@@ -36,7 +37,8 @@ final class HttpClientImpl implements HttpClient {
                 .setSuccessCallback(successCallback)
                 .setFailureCallback(failureCallback)
                 .build();
-
+/*        Log.d("openLocate", url);
+        Log.d("openLocate", json);*/
         execute(request);
     }
 

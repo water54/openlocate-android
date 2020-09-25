@@ -1,7 +1,6 @@
 package com.openlocate.example;
 
 import android.app.Application;
-import android.os.Build;
 
 import com.openlocate.android.core.OpenLocate;
 
@@ -20,6 +19,7 @@ public class ExampleApplication extends Application {
                 .build());
 
         OpenLocate.Configuration configuration = new OpenLocate.Configuration.Builder(this, endpoints)
+                .setTransmissionInterval(15 * 60)
                 .withoutDeviceManufacturer()
                 .withoutDeviceModel()
                 .build();

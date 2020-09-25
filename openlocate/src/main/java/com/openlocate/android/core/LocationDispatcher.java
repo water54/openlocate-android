@@ -21,8 +21,9 @@
  */
 package com.openlocate.android.core;
 
-import android.support.annotation.NonNull;
 import android.util.Log;
+
+import androidx.annotation.NonNull;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -40,7 +41,7 @@ final class LocationDispatcher {
         final List<OpenLocateLocation> locations = dataSource.getSince(sinceId);
 
         if (locations == null || locations.isEmpty()) {
-            Log.i(TAG, "Attempted to post locations, but found none to post.");
+            Log.i(TAG, "Attempted to post locations, but found none to post.endpoint=null?" + (endpoint == null));
             return null;
         }
 

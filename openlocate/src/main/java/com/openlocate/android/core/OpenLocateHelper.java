@@ -3,17 +3,19 @@ package com.openlocate.android.core;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.util.Log;
 
-import com.firebase.jobdispatcher.Constraint;
-import com.firebase.jobdispatcher.FirebaseJobDispatcher;
-import com.firebase.jobdispatcher.GooglePlayDriver;
-import com.firebase.jobdispatcher.Job;
-import com.firebase.jobdispatcher.Lifetime;
-import com.firebase.jobdispatcher.Trigger;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.work.BackoffPolicy;
+import androidx.work.Constraints;
+import androidx.work.ExistingPeriodicWorkPolicy;
+import androidx.work.NetworkType;
+import androidx.work.PeriodicWorkRequest;
+import androidx.work.WorkManager;
+
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationRequest;
@@ -22,8 +24,8 @@ import com.google.android.gms.location.LocationServices;
 import org.json.JSONException;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
-import static com.firebase.jobdispatcher.RetryStrategy.RETRY_POLICY_EXPONENTIAL;
 
 final class OpenLocateHelper implements GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener {
@@ -36,7 +38,7 @@ final class OpenLocateHelper implements GoogleApiClient.ConnectionCallbacks,
     private OpenLocate.Configuration configuration;
     private GoogleApiClient mGoogleApiClient;
     private LocationRequest mLocationRequest;
-    private FirebaseJobDispatcher jobDispatcher;
+//    private FirebaseJobDispatcher jobDispatcher;
 
     public OpenLocateHelper(Context context, OpenLocate.Configuration configuration) {
         this.context = context;
@@ -47,11 +49,11 @@ final class OpenLocateHelper implements GoogleApiClient.ConnectionCallbacks,
                 .addApi(LocationServices.API)
                 .build();
 
-        jobDispatcher = new FirebaseJobDispatcher(new GooglePlayDriver(context));
+//        jobDispatcher = new FirebaseJobDispatcher(new GooglePlayDriver(context));
     }
 
     public void startTracking() {
-        if (mGoogleApiClient.isConnected() == false && mGoogleApiClient.isConnecting() == false) {
+        if (!mGoogleApiClient.isConnected() && mGoogleApiClient.isConnecting() == false) {
             mGoogleApiClient.connect();
         }
     }
@@ -132,7 +134,7 @@ final class OpenLocateHelper implements GoogleApiClient.ConnectionCallbacks,
 
     private void scheduleDispatchLocationService() {
         List<OpenLocate.Endpoint> endpoints = configuration.getEndpoints();
-        if (endpoints == null || jobDispatcher == null) {
+        if (endpoints == null /*|| jobDispatcher == null*/) {
             return;
         }
 
@@ -148,8 +150,24 @@ final class OpenLocateHelper implements GoogleApiClient.ConnectionCallbacks,
 
         int initialBackoff = 600;
         int maximumBackoff = Math.max((int) transmissionIntervalInSecs / 2, 3600);
+        final long interval = (long) (transmissionIntervalInSecs * 0.9);
+        Constraints.Builder constraints = new Constraints.Builder()
+                .setRequiresCharging(false)
+                .setRequiredNetworkType(NetworkType.CONNECTED);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            constraints.setTriggerContentMaxDelay(maximumBackoff, TimeUnit.SECONDS);
+        }
 
-        Job job = jobDispatcher.newJobBuilder()
+        PeriodicWorkRequest request = new PeriodicWorkRequest
+                .Builder(DispatchLocationService.class, transmissionIntervalInSecs, TimeUnit.SECONDS)
+                .setInitialDelay(initialBackoff, TimeUnit.SECONDS)
+                .setConstraints(constraints.build())
+                .addTag(LOCATION_DISPATCH_TAG)
+                .setBackoffCriteria(BackoffPolicy.LINEAR, interval, TimeUnit.SECONDS)
+                .build();
+        WorkManager.getInstance(context).enqueueUniquePeriodicWork(LOCATION_DISPATCH_TAG, ExistingPeriodicWorkPolicy.KEEP, request);
+        /*Log.d("openLocate", "regist work:interval " + transmissionIntervalInSecs);*/
+/*        Job job = jobDispatcher.newJobBuilder()
                 .setService(DispatchLocationService.class)
                 .setTag(LOCATION_DISPATCH_TAG)
                 .setRecurring(true)
@@ -166,13 +184,14 @@ final class OpenLocateHelper implements GoogleApiClient.ConnectionCallbacks,
         } catch (IllegalArgumentException e) {
             Log.e(TAG, "Google Play Services is not up to date.");
             stopTracking();
-        }
+        }*/
     }
 
     private void unscheduleDispatchLocationService() {
-        if (jobDispatcher != null) {
+        WorkManager.getInstance(context).cancelAllWorkByTag(LOCATION_DISPATCH_TAG);
+        /*if (jobDispatcher != null) {
             jobDispatcher.cancel(LOCATION_DISPATCH_TAG);
-        }
+        }*/
     }
 
 }
